@@ -13,6 +13,13 @@ export function TeacherModal({ schoolId, slug, classes }: { schoolId: string, sl
   const [classId, setClassId] = useState(classes.length > 0 ? classes[0].id : "");
 
   async function action(formData: FormData) {
+    const email = formData.get("email") as string;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {

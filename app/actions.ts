@@ -193,3 +193,107 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   
   return { successUrl: `${readoraUrl}/auth/token-exchange?token=${token}` };
 }
+
+export async function updateSchoolSettings(schoolId: string, slug: string, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) throw new Error("Unauthorized");
+
+  const adminClient = await createAdminClient();
+
+  const { data: adminCheck } = await adminClient
+    .from("school_admins")
+    .select("id")
+    .eq("school_id", schoolId)
+    .eq("user_id", user.id)
+    .single();
+    
+  if (!adminCheck) throw new Error("Unauthorized");
+
+  const name = formData.get("name") as string;
+  const bannerUrl = formData.get("banner_url") as string;
+
+  if (!name) throw new Error("School name is required.");
+
+  const { error: updateError } = await adminClient
+    .from("schools")
+    .update({ name, banner_url: bannerUrl })
+    .eq("id", schoolId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/school/${slug}`);
+  return { success: true };
+}
+
+export async function deleteClass(schoolId: string, slug: string, classId: string) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) throw new Error("Unauthorized");
+
+  const adminClient = await createAdminClient();
+
+  const { data: adminCheck } = await adminClient
+    .from("school_admins")
+    .select("id")
+    .eq("school_id", schoolId)
+    .eq("user_id", user.id)
+    .single();
+    
+  if (!adminCheck) throw new Error("Unauthorized");
+
+  // Delete organizations (cascades or we need to handle members? Let's assume cascade or explicitly delete members first)
+  await adminClient.from("organization_members").delete().eq("organization_id", classId);
+  await adminClient.from("teacher_assignments").delete().eq("org_id", classId);
+  
+  const { error: deleteError } = await adminClient
+    .from("organizations")
+    .delete()
+    .eq("id", classId)
+    .eq("school_id", schoolId);
+
+  if (deleteError) throw new Error(deleteError.message);
+
+  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/school/${slug}`);
+}
+
+export async function removeTeacher(schoolId: string, slug: string, assignmentId: string) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) throw new Error("Unauthorized");
+
+  const adminClient = await createAdminClient();
+
+  const { data: adminCheck } = await adminClient
+    .from("school_admins")
+    .select("id")
+    .eq("school_id", schoolId)
+    .eq("user_id", user.id)
+    .single();
+    
+  if (!adminCheck) throw new Error("Unauthorized");
+
+  // We need the org_id and user_id to also remove from organization_members
+  const { data: assignment } = await adminClient
+    .from("teacher_assignments")
+    .select("org_id, teacher_user_id")
+    .eq("id", assignmentId)
+    .single();
+
+  if (assignment) {
+     await adminClient.from("organization_members").delete()
+       .eq("organization_id", assignment.org_id)
+       .eq("user_id", assignment.teacher_user_id);
+  }
+
+  const { error: deleteError } = await adminClient
+    .from("teacher_assignments")
+    .delete()
+    .eq("id", assignmentId);
+
+  if (deleteError) throw new Error(deleteError.message);
+
+  revalidatePath(`/admin/${slug}`);
+}

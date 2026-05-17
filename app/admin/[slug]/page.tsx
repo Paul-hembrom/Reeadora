@@ -4,6 +4,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { ClassModal } from "./class-modal";
 import { TeacherModal } from "./teacher-modal";
+import { DeleteClassButton } from "./delete-class-button";
+import { RemoveTeacherButton } from "./remove-teacher-button";
+import Link from "next/link";
 
 export default async function AdminDashboard({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -63,6 +66,9 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
       <div className="flex justify-between items-center mb-6">
         <div className="text-sm font-medium text-slate-500">Schools Gateway / Admin Dashboard</div>
         <div className="flex gap-3">
+           <Button variant="outline" asChild>
+             <Link href={`/admin/${slug}/settings`}>Settings</Link>
+           </Button>
            <Button variant="secondary" asChild>
              <a href={`/school/${slug}`} target="_blank" rel="noreferrer">Preview Public Portal</a>
            </Button>
@@ -91,8 +97,11 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
             ) : (
               <div className="grid sm:grid-cols-2 gap-3 pb-2">
                 {classes.map(c => (
-                  <div key={c.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAFBFC]">
-                    <div className="font-semibold text-[15px] mb-2 text-slate-700">{c.name}</div>
+                  <div key={c.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAFBFC] relative group">
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <DeleteClassButton schoolId={school.id} slug={slug} classId={c.id} />
+                    </div>
+                    <div className="font-semibold text-[15px] mb-2 text-slate-700 pr-8">{c.name}</div>
                     <div className="bg-white border border-slate-200 py-1.5 px-2.5 rounded-md font-mono text-[11px] text-slate-500 flex justify-between mt-1.5">
                       <span>Student:</span> <span>{c.student_password}</span>
                     </div>
@@ -142,6 +151,9 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
                           {t.subjects[0]}
                         </div>
                       )}
+                      <div className="ml-3">
+                        <RemoveTeacherButton schoolId={school.id} slug={slug} assignmentId={t.id} />
+                      </div>
                     </div>
                   );
                 })}

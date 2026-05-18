@@ -24,6 +24,16 @@ export async function createSchool(formData: FormData) {
 
   const adminClient = await createAdminClient();
 
+  // Sync user to public.users to satisfy foreign key
+  const { data: existingUser } = await adminClient.from("users").select("id").eq("id", user.id).maybeSingle();
+  if (!existingUser) {
+    await adminClient.from("users").insert({
+      id: user.id,
+      name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown User',
+      email: user.email,
+    });
+  }
+
   // Insert school
   const { data: school, error: schoolError } = await adminClient
     .from("schools")
@@ -151,6 +161,16 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   }
 
   const adminClient = await createAdminClient();
+
+  // Sync user to public.users to satisfy foreign key
+  const { data: existingUser } = await adminClient.from("users").select("id").eq("id", user.id).maybeSingle();
+  if (!existingUser) {
+    await adminClient.from("users").insert({
+      id: user.id,
+      name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Unknown User',
+      email: user.email,
+    });
+  }
 
   const { data: org } = await adminClient
     .from("organizations")

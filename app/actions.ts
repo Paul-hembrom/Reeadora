@@ -35,11 +35,26 @@ export async function createSchool(formData: FormData) {
   }
 
   // Insert school
-  const { data: school, error: schoolError } = await adminClient
+  let { data: school, error: schoolError } = await adminClient
     .from("schools")
     .insert({ name, slug, banner_url: bannerUrl })
     .select()
     .maybeSingle();
+
+  if (schoolError) {
+    if (schoolError.code === '23505') {
+      // Slug collision - just append some random chars instead of erroring out entirely
+      const uniqueSlug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+      const retryResult = await adminClient
+        .from("schools")
+        .insert({ name, slug: uniqueSlug, banner_url: bannerUrl })
+        .select()
+        .maybeSingle();
+      
+      school = retryResult.data;
+      schoolError = retryResult.error;
+    }
+  }
 
   if (schoolError || !school) {
     throw new Error(schoolError?.message || "Failed to create school.");
@@ -55,7 +70,7 @@ export async function createSchool(formData: FormData) {
   }
 
   revalidatePath("/");
-  redirect(`/admin/${slug}`);
+  redirect(`/admin/${school.slug}`);
 }
 
 export async function createClass(schoolId: string, slug: string, formData: FormData) {

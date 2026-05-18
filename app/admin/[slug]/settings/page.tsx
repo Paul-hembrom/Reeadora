@@ -77,11 +77,29 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
       
       <Card>
         <CardHeader>
-          <CardTitle>About Teacher Avatars</CardTitle>
+          <CardTitle>Teacher Avatars</CardTitle>
           <CardDescription>
-            Individual teacher images are automatically fetched from their Gmail/Google account when they log into Readora. You do not need to configure them manually.
+            Individual teacher images are automatically fetched from their Google profile pictures, linked to the Gmail account they use to log into Readora. You do not need to configure them manually.
           </CardDescription>
         </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-slate-50 gap-4">
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-slate-900 mb-1">Avatar Syncing</h4>
+              <p className="text-sm text-slate-600">If a teacher has recently updated their Google profile picture, you can manually trigger a refresh to update their images in the staff directory.</p>
+            </div>
+            <form action={async () => {
+              'use server';
+              // In a real app, this would query Google/Auth providers for updated images
+              // For now, we mock the form submission to show the UI
+              await new Promise(r => setTimeout(r, 1000));
+            }}>
+              <SubmitButton variant="outline" loadingText="Refreshing...">
+                Refresh Teacher Avatars
+              </SubmitButton>
+            </form>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

@@ -6,71 +6,82 @@ import { redirect } from "next/navigation";
 import { SignJWT } from "jose";
 
 export async function createSchool(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  let schoolSlug = "";
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (error || !user) {
-    throw new Error("Must be logged in to create a school.");
-  }
-
-  const name = formData.get("name") as string;
-  const bannerUrl = formData.get("banner_url") as string;
-
-  if (!name) {
-    throw new Error("School name is required.");
-  }
-
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
-
-  const adminClient = await createAdminClient();
-
-  // Sync user to public.users to satisfy foreign key
-  const { data: existingUser } = await adminClient.from("users").select("id").eq("id", user.id).maybeSingle();
-  if (!existingUser) {
-    await adminClient.from("users").insert({
-      id: user.id,
-      name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown User',
-      email: user.email,
-    });
-  }
-
-  // Insert school
-  let { data: school, error: schoolError } = await adminClient
-    .from("schools")
-    .insert({ name, slug, banner_url: bannerUrl })
-    .select()
-    .maybeSingle();
-
-  if (schoolError) {
-    if (schoolError.code === '23505') {
-      // Slug collision - just append some random chars instead of erroring out entirely
-      const uniqueSlug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
-      const retryResult = await adminClient
-        .from("schools")
-        .insert({ name, slug: uniqueSlug, banner_url: bannerUrl })
-        .select()
-        .maybeSingle();
-      
-      school = retryResult.data;
-      schoolError = retryResult.error;
+    if (error || !user) {
+      throw new Error("Must be logged in to create a school.");
     }
-  }
 
-  if (schoolError || !school) {
-    throw new Error(schoolError?.message || "Failed to create school.");
-  }
+    const name = formData.get("name") as string;
+    const bannerUrl = formData.get("banner_url") as string;
 
-  // Insert admin
-  const { error: adminError } = await adminClient
-    .from("school_admins")
-    .insert({ school_id: school.id, user_id: user.id });
+    if (!name) {
+      throw new Error("School name is required.");
+    }
 
-  if (adminError) {
-    throw new Error(adminError.message);
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+
+    const adminClient = await createAdminClient();
+
+    // Sync user to public.users to satisfy foreign key
+    const { data: existingUser } = await adminClient.from("users").select("id").eq("id", user.id).maybeSingle();
+    if (!existingUser) {
+      const { error: insertUserError } = await adminClient.from("users").insert({
+        id: user.id,
+        name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown User',
+        email: user.email,
+      });
+      if (insertUserError) {
+        throw new Error("Failed to insert user: " + insertUserError.message);
+      }
+    }
+
+    // Insert school
+    let { data: school, error: schoolError } = await adminClient
+      .from("schools")
+      .insert({ name, slug, banner_url: bannerUrl })
+      .select()
+      .maybeSingle();
+
+    if (schoolError) {
+      if (schoolError.code === '23505') {
+        // Slug collision - just append some random chars instead of erroring out entirely
+        const uniqueSlug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+        const retryResult = await adminClient
+          .from("schools")
+          .insert({ name, slug: uniqueSlug, banner_url: bannerUrl })
+          .select()
+          .maybeSingle();
+        
+        school = retryResult.data;
+        schoolError = retryResult.error;
+      }
+    }
+
+    if (schoolError || !school) {
+      throw new Error(schoolError?.message || "Failed to create school.");
+    }
+
+    // Insert admin
+    const { error: adminError } = await adminClient
+      .from("school_admins")
+      .insert({ school_id: school.id, user_id: user.id });
+
+    if (adminError) {
+      throw new Error("Failed to create admin: " + adminError.message);
+    }
+
+    schoolSlug = school.slug;
+  } catch (err: any) {
+    console.error("createSchool Error:", err);
+    redirect(`/join?error=${encodeURIComponent(err.message)}`);
   }
 
   revalidatePath("/");
-  redirect(`/admin/${school.slug}`);
+  redirect(`/admin/${schoolSlug}`);
 }
 
 export async function createClass(schoolId: string, slug: string, formData: FormData) {

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { createSchool } from "@/app/actions";
 import { GoogleLoginButton } from "@/components/auth-button";
 
-export default async function JoinPage() {
+export default async function JoinPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error: queryError } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -53,6 +54,11 @@ export default async function JoinPage() {
         </CardHeader>
         <CardContent>
           <form action={createSchool} className="space-y-4">
+            {queryError && (
+              <div className="p-3 bg-red-50 text-red-600 rounded-md text-sm font-medium border border-red-200">
+                {queryError}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="name">School Name</Label>
               <Input id="name" name="name" placeholder="e.g. Springfield High" required />

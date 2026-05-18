@@ -1,11 +1,8 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { createSchool } from "@/app/actions";
 import { GoogleLoginButton } from "@/components/auth-button";
+import { OnboardSchoolForm } from "./onboard-school-form";
 
 export default async function JoinPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error: queryError } = await searchParams;
@@ -69,22 +66,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
           <CardDescription>Enter the school details below. You will become the administrator.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createSchool} className="space-y-4">
-            {queryError && (
-              <div className="p-3 bg-red-50 text-red-600 rounded-md text-sm font-medium border border-red-200">
-                {queryError}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="name">School Name</Label>
-              <Input id="name" name="name" placeholder="e.g. Springfield High" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="banner_url">Banner URL (Optional)</Label>
-              <Input id="banner_url" name="banner_url" type="url" placeholder="https://example.com/banner.jpg" />
-            </div>
-            <Button type="submit" className="w-full">Create School</Button>
-          </form>
+          <OnboardSchoolForm queryError={queryError} />
         </CardContent>
       </Card>
     </div>

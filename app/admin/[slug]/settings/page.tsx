@@ -1,11 +1,11 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateSchoolSettings } from "@/app/actions";
 import Link from "next/link";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -40,7 +40,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
   }
 
   return (
-    <div className="flex flex-col h-full max-w-2xl mx-auto align-top">
+    <div className="flex flex-col h-full max-w-2xl mx-auto align-top space-y-6">
       <div className="flex items-center mb-6 justify-between border-b border-slate-200 pb-4">
         <div>
            <Link href={`/admin/${slug}`} className="text-sm font-medium text-indigo-600 hover:underline mb-2 inline-block">
@@ -68,11 +68,20 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
               <Label htmlFor="banner_url">Banner URL (Optional)</Label>
               <Input id="banner_url" name="banner_url" type="url" defaultValue={school.banner_url || ''} placeholder="https://example.com/banner.jpg" />
             </div>
-            <Button type="submit" className="w-full">
+            <SubmitButton className="w-full">
               Save Changes
-            </Button>
+            </SubmitButton>
           </form>
         </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>About Teacher Avatars</CardTitle>
+          <CardDescription>
+            Individual teacher images are automatically fetched from their Gmail/Google account when they log into Readora. You do not need to configure them manually.
+          </CardDescription>
+        </CardHeader>
       </Card>
     </div>
   );

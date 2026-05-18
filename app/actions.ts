@@ -78,11 +78,11 @@ export async function createSchool(formData: FormData) {
     schoolSlug = school.slug;
   } catch (err: any) {
     console.error("createSchool Error:", err);
-    redirect(`/join?error=${encodeURIComponent(err.message)}`);
+    return { error: err.message };
   }
 
   revalidatePath("/");
-  redirect(`/admin/${schoolSlug}`);
+  return { slug: schoolSlug };
 }
 
 export async function createClass(schoolId: string, slug: string, formData: FormData) {
@@ -120,7 +120,12 @@ export async function createClass(schoolId: string, slug: string, formData: Form
       student_password: studentPassword,
     });
 
-  if (classError) throw new Error(classError.message);
+  if (classError) {
+    if (classError.code === '23505') {
+      throw new Error("A class with this name already exists.");
+    }
+    throw new Error(classError.message);
+  }
 
   revalidatePath(`/admin/${slug}`);
 }
@@ -142,7 +147,12 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
     
   if (!adminCheck) throw new Error("Unauthorized");
 
-  const email = formData.get("email") as string;
+  const emailStr = formData.get("email") as string;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailStr || !emailRegex.test(emailStr)) {
+    throw new Error("Invalid email format.");
+  }
+  const email = emailStr;
   const subjectsStr = formData.get("subjects") as string;
   const subjects = subjectsStr ? subjectsStr.split(",").map(s => s.trim()) : [];
 

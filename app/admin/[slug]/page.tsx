@@ -24,7 +24,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
     .from("schools")
     .select("*")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   if (!school) {
     notFound();
@@ -36,7 +36,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
     .select("id")
     .eq("school_id", school.id)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (!adminCheck) {
     return <div className="text-center mt-20 text-red-500 font-bold">Unauthorized.</div>;

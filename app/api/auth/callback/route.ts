@@ -21,27 +21,35 @@ export async function GET(request: Request) {
         .from('users')
         .select('id')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
         
       if (!existingUser) {
         // Create user in public.users
-        await adminSupabase.from('users').insert({
+        const { error: insertError } = await adminSupabase.from('users').insert({
           id: user.id,
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown User',
           email: user.email,
           password_hash: null, // Keep null for gateway users
         })
+        if (insertError) {
+          console.error("Failed to insert user:", insertError)
+        }
       }
       
+      const nextUrl = new URL(next, origin)
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'
+      
       if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}${next}`)
+        return NextResponse.redirect(nextUrl)
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
+        // Clean up forwardedHost if it has multiple values
+        const primaryHost = forwardedHost.split(',')[0].trim()
+        nextUrl.host = primaryHost
+        nextUrl.protocol = 'https:'
+        return NextResponse.redirect(nextUrl)
       } else {
-        return NextResponse.redirect(`${origin}${next}`)
+        return NextResponse.redirect(nextUrl)
       }
     }
   }

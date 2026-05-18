@@ -29,7 +29,7 @@ export async function createSchool(formData: FormData) {
     .from("schools")
     .insert({ name, slug, banner_url: bannerUrl })
     .select()
-    .single();
+    .maybeSingle();
 
   if (schoolError || !school) {
     throw new Error(schoolError?.message || "Failed to create school.");
@@ -61,7 +61,7 @@ export async function createClass(schoolId: string, slug: string, formData: Form
     .select("id")
     .eq("school_id", schoolId)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
     
   if (!adminCheck) throw new Error("Unauthorized");
 
@@ -101,7 +101,7 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
     .select("id")
     .eq("school_id", schoolId)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
     
   if (!adminCheck) throw new Error("Unauthorized");
 
@@ -118,7 +118,7 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
     .from("users")
     .select("id")
     .eq("email", email)
-    .single();
+    .maybeSingle();
 
   if (!teacherUser) {
     throw new Error("User with that email not found. They must sign in first.");
@@ -156,7 +156,7 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
     .from("organizations")
     .select("id, teacher_password, student_password")
     .eq("id", classId)
-    .single();
+    .maybeSingle();
 
   if (!org) {
     return { error: "Class not found." };
@@ -206,7 +206,7 @@ export async function updateSchoolSettings(schoolId: string, slug: string, formD
     .select("id")
     .eq("school_id", schoolId)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
     
   if (!adminCheck) throw new Error("Unauthorized");
 
@@ -239,7 +239,7 @@ export async function deleteClass(schoolId: string, slug: string, classId: strin
     .select("id")
     .eq("school_id", schoolId)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
     
   if (!adminCheck) throw new Error("Unauthorized");
 
@@ -271,7 +271,7 @@ export async function removeTeacher(schoolId: string, slug: string, assignmentId
     .select("id")
     .eq("school_id", schoolId)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
     
   if (!adminCheck) throw new Error("Unauthorized");
 
@@ -280,7 +280,7 @@ export async function removeTeacher(schoolId: string, slug: string, assignmentId
     .from("teacher_assignments")
     .select("org_id, teacher_user_id")
     .eq("id", assignmentId)
-    .single();
+    .maybeSingle();
 
   if (assignment) {
      await adminClient.from("organization_members").delete()

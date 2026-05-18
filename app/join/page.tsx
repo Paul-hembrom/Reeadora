@@ -34,7 +34,7 @@ export default async function JoinPage() {
     .select("schools(slug)")
     .eq("user_id", user.id)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (existingAdmin && existingAdmin.schools) {
     // If we have an array or object, depending on relationships

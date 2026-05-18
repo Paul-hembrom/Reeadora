@@ -13,7 +13,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ slug: s
     .from("schools")
     .select("*")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   if (!school) {
     notFound();

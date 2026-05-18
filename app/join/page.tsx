@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,23 @@ export default async function JoinPage() {
         </Card>
       </div>
     );
+  }
+
+  // If user is already an admin, redirect them instead
+  const adminClient = await createAdminClient();
+  const { data: existingAdmin } = await adminClient
+    .from("school_admins")
+    .select("schools(slug)")
+    .eq("user_id", user.id)
+    .limit(1)
+    .single();
+
+  if (existingAdmin && existingAdmin.schools) {
+    // If we have an array or object, depending on relationships
+    const slug = Array.isArray(existingAdmin.schools) ? existingAdmin.schools[0]?.slug : (existingAdmin.schools as any)?.slug;
+    if (slug) {
+      redirect(`/admin/${slug}`);
+    }
   }
 
   return (

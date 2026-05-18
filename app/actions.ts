@@ -33,6 +33,7 @@ export async function createSchool(formData: FormData) {
         id: user.id,
         name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown User',
         email: user.email,
+        password_hash: '',
       });
       if (insertUserError) {
         throw new Error("Failed to insert user: " + insertUserError.message);
@@ -195,6 +196,7 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
       id: user.id,
       name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Unknown User',
       email: user.email,
+      password_hash: '',
     });
   }
 

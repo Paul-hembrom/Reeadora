@@ -28,25 +28,41 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
     );
   }
 
-  // If user is already an admin, redirect them instead
+  // Fetch all schools this user is an admin of
   const adminClient = await createAdminClient();
-  const { data: existingAdmin } = await adminClient
+  const { data: existingAdmins } = await adminClient
     .from("school_admins")
-    .select("schools(slug)")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
+    .select("schools(name, slug)")
+    .eq("user_id", user.id);
 
-  if (existingAdmin && existingAdmin.schools) {
-    // If we have an array or object, depending on relationships
-    const slug = Array.isArray(existingAdmin.schools) ? existingAdmin.schools[0]?.slug : (existingAdmin.schools as any)?.slug;
-    if (slug) {
-      redirect(`/admin/${slug}`);
-    }
-  }
+  const existingSchools = existingAdmins?.map(admin => {
+    const school = Array.isArray(admin.schools) ? admin.schools[0] : admin.schools;
+    return school as { name: string, slug: string };
+  }).filter(Boolean) || [];
 
   return (
-    <div className="max-w-md mx-auto mt-10">
+    <div className="max-w-md mx-auto mt-10 space-y-8">
+      {existingSchools.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Schools</CardTitle>
+            <CardDescription>Select a school to manage.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {existingSchools.map((school, idx) => (
+              <a
+                key={idx}
+                href={`/admin/${school.slug}`}
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition"
+              >
+                <div className="font-medium text-gray-900">{school.name}</div>
+                <div className="text-gray-500 text-sm">Manage &rarr;</div>
+              </a>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Onboard a School</CardTitle>

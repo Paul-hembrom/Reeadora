@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const code = (await searchParams)?.code;
+  if (code) {
+    // If Supabase fell back to the Site URL because of wildcard mismatch,
+    // we redirect to the actual callback handler to process the auth code.
+    redirect(`/api/auth/callback?code=${code}&next=/join`);
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] text-center px-4 space-y-8">
       <div className="space-y-4">

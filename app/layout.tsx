@@ -42,10 +42,6 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
                      <Building2 className="h-4 w-4" />
                      Onboard School
                    </Link>
-                   <Link href="/setup" className="hidden sm:flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                     <Code2 className="h-4 w-4" />
-                     Dev Setup
-                   </Link>
                    <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block mx-1"></div>
                    <ModeToggle />
                 </nav>

@@ -356,6 +356,10 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) throw new Error("JWT_SECRET is not configured on server");
 
+  if (actualRole === 'student') {
+    return { successUrl: '/not-authorized' };
+  }
+
   const token = await new SignJWT({ user_id: user.id, org_id: classId, role: actualRole })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')

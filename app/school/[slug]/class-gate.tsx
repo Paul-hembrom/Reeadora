@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { joinClass } from "@/app/actions";
 import { GoogleLoginButton } from "@/components/auth-button";
-import { LogIn, ArrowRight, BookOpen, GraduationCap, Users, LogOut } from "lucide-react";
+import { LogIn, ArrowRight, BookOpen, GraduationCap, Users, LogOut, Eye, EyeOff } from "lucide-react";
 
 export function ClassGate({ orgId, name, schoolSlug }: { orgId: string, name: string, schoolSlug: string }) {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [authNeeded, setAuthNeeded] = useState(false);
@@ -119,15 +120,25 @@ export function ClassGate({ orgId, name, schoolSlug }: { orgId: string, name: st
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-2">
                     <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">Enter your {role} access code</Label>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="Access code..."
-                      required 
-                      className="h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-lg tracking-widest font-mono text-center"
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="password" 
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder="Access code..."
+                        required 
+                        className="h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-lg tracking-widest font-mono text-center pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                   {error && (
                     <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg text-center">

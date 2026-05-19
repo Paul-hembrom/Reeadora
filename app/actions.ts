@@ -342,18 +342,28 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
     return { error: "Could not add as member." };
   }
 
+  // Look up actual role
+  const { data: memberRecord } = await adminClient
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", classId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const actualRole = memberRecord?.role || role;
+
   // generate JWT
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) throw new Error("JWT_SECRET is not configured on server");
 
-  const token = await new SignJWT({ user_id: user.id, org_id: classId, role })
+  const token = await new SignJWT({ user_id: user.id, org_id: classId, role: actualRole })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')
     .sign(new TextEncoder().encode(jwtSecret));
 
   const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
   
-  return { successUrl: `${readoraUrl}/auth/token-exchange?token=${token}` };
+  return { successUrl: `${readoraUrl}/auth/token-exchange?token=${token}&role=${actualRole}` };
 }
 
 export async function updateSchoolSettings(schoolId: string, slug: string, formData: FormData) {

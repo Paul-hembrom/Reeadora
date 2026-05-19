@@ -40,7 +40,14 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
     .maybeSingle();
 
   if (!adminCheck) {
-    return <div className="text-center mt-20 text-red-500 font-bold">Unauthorized.</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center bg-red-50 text-red-600 border border-red-200 p-8 rounded-xl shadow-sm">
+          <h1 className="text-2xl font-bold mb-2">Not authorized</h1>
+          <p>You do not have permission to view the admin dashboard.</p>
+        </div>
+      </div>
+    );
   }
 
   const subscription = await checkAndGetSubscription(school.id);

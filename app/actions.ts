@@ -75,6 +75,25 @@ export async function createSchool(formData: FormData) {
       throw new Error("Failed to create admin: " + adminError.message);
     }
 
+    // Insert school subscription
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 14);
+
+    const { error: subError } = await adminClient
+      .from("school_subscriptions")
+      .insert({
+        school_id: school.id,
+        plan: 'growth',
+        status: 'trial',
+        trial_end_date: trialEnd.toISOString(),
+        current_period_end: trialEnd.toISOString()
+      });
+
+    if (subError) {
+      console.warn("Failed to create school subscription:", subError);
+      // Not failing the whole flow, but we can log it.
+    }
+
     schoolSlug = school.slug;
   } catch (err: any) {
     console.error("createSchool Error:", err);
@@ -83,6 +102,86 @@ export async function createSchool(formData: FormData) {
 
   revalidatePath("/");
   return { slug: schoolSlug };
+}
+
+export async function toggleSchoolLock(schoolId: string, currentStatus: string) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user || user.email !== process.env.SUPERADMIN_EMAIL) {
+    throw new Error("Unauthorized");
+  }
+
+  const adminClient = await createAdminClient();
+  let newStatus = currentStatus === 'locked' ? 'active' : 'locked';
+  
+  const updateData: any = { status: newStatus };
+  if (newStatus === 'active') {
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    updateData.current_period_end = nextMonth.toISOString();
+  }
+
+  const { error: subError } = await adminClient
+    .from("school_subscriptions")
+    .update(updateData)
+    .eq("school_id", schoolId);
+
+  if (subError) throw new Error(subError.message);
+
+  await adminClient.from("school_access_log").insert({
+    school_id: schoolId,
+    action: newStatus === 'locked' ? 'admin_locked' : 'admin_unlocked',
+    performed_by: user.id
+  });
+
+  revalidatePath("/superadmin");
+}
+
+export async function checkAndGetSubscription(schoolId: string) {
+  const adminClient = await createAdminClient();
+
+  // Get current subscription
+  const { data: sub } = await adminClient
+    .from("school_subscriptions")
+    .select("*")
+    .eq("school_id", schoolId)
+    .maybeSingle();
+
+  if (!sub) return null;
+
+  // Let's implement the auto-update rules
+  // If status is active/trial, but current_period_end is passed
+  const now = new Date();
+  const periodEnd = new Date(sub.current_period_end);
+
+  let newStatus = sub.status;
+
+  if ((sub.status === 'active' || sub.status === 'trial') && periodEnd < now) {
+    const diffDays = (now.getTime() - periodEnd.getTime()) / (1000 * 3600 * 24);
+    if (diffDays > 7) {
+      newStatus = 'locked';
+    } else {
+      newStatus = 'past_due';
+    }
+  } else if (sub.status === 'past_due' && periodEnd < now) {
+    const diffDays = (now.getTime() - periodEnd.getTime()) / (1000 * 3600 * 24);
+    if (diffDays > 7) {
+      newStatus = 'locked';
+    }
+  }
+
+  // Update if needed
+  if (newStatus !== sub.status || (sub.status === 'trial' && newStatus === 'trial')) {
+     if (newStatus !== sub.status) {
+       await adminClient
+         .from("school_subscriptions")
+         .update({ status: newStatus })
+         .eq("id", sub.id);
+       sub.status = newStatus;
+     }
+  }
+
+  return sub;
 }
 
 export async function createClass(schoolId: string, slug: string, formData: FormData) {
@@ -212,12 +311,17 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
 
   const { data: org } = await adminClient
     .from("organizations")
-    .select("id, teacher_password, student_password")
+    .select("id, school_id, teacher_password, student_password")
     .eq("id", classId)
     .maybeSingle();
 
   if (!org) {
     return { error: "Class not found." };
+  }
+
+  const sub = await checkAndGetSubscription(org.school_id);
+  if (sub?.status === 'locked') {
+    return { error: 'Service_Suspended' };
   }
 
   const isValid = 

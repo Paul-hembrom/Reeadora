@@ -33,7 +33,11 @@ export function ClassGate({ orgId, name, schoolSlug }: { orgId: string, name: st
       }
       
       if (res.error) {
-        setError(res.error);
+        if (res.error === 'Service_Suspended') {
+          setError("This school's account is currently suspended. Please contact administration.");
+        } else {
+          setError(res.error);
+        }
         return;
       }
 

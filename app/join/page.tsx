@@ -25,6 +25,11 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
     );
   }
 
+  const superadminEmail = process.env.SUPERADMIN_EMAIL;
+  if (user && user.email === superadminEmail) {
+    redirect("/superadmin");
+  }
+
   // Fetch all schools this user is an admin of
   const adminClient = await createAdminClient();
   const { data: existingAdmins } = await adminClient

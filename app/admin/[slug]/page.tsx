@@ -7,6 +7,7 @@ import { TeacherModal } from "./teacher-modal";
 import { DeleteClassButton } from "./delete-class-button";
 import { RemoveTeacherButton } from "./remove-teacher-button";
 import Link from "next/link";
+import { checkAndGetSubscription } from "@/app/actions";
 
 export default async function AdminDashboard({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -42,6 +43,10 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
     return <div className="text-center mt-20 text-red-500 font-bold">Unauthorized.</div>;
   }
 
+  const subscription = await checkAndGetSubscription(school.id);
+  const isLockedOrPastDue = subscription && (subscription.status === 'locked' || subscription.status === 'past_due');
+  const whatsappUrl = `https://wa.me/+9779767697274?text=${encodeURIComponent(`Hi, I am ${user.email} from ${school.name}. I want to renew our Readora subscription.`)}`;
+
   // Load classes
   const { data: classes } = await adminClient
     .from("organizations")
@@ -70,13 +75,24 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
              <Link href={`/admin/${slug}/settings`}>Settings</Link>
            </Button>
            <Button variant="secondary" asChild>
-             <a href={`/school/${slug}`} target="_blank" rel="noreferrer">Preview Public Portal</a>
+             <a href={`/school/${slug}`} target="_blank" rel="noreferrer" className={isLockedOrPastDue ? 'pointer-events-none opacity-50' : ''}>Preview Public Portal</a>
            </Button>
            <div className="w-9 h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-xs ring-2 ring-white">
              AD
            </div>
         </div>
       </div>
+
+      {isLockedOrPastDue && (
+        <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg mb-6 flex justify-between items-center shadow-sm">
+          <div className="font-medium text-sm">
+            Your subscription is overdue. Renew now to restore full access.
+          </div>
+          <Button size="sm" className="bg-yellow-500 text-white hover:bg-yellow-600 border-0" asChild>
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Renew Now</a>
+          </Button>
+        </div>
+      )}
 
       <div className="h-[160px] bg-gradient-to-br from-indigo-500 to-purple-500 rounded-[24px] w-full p-8 flex flex-col justify-end text-white mb-8 relative shadow-[0_10px_25px_-5px_rgba(99,102,241,0.3)]">
         <h1 className="text-[28px] font-bold m-0 tracking-tight">{school.name}</h1>
@@ -89,7 +105,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
             <div>
               <CardTitle>Active Classes</CardTitle>
             </div>
-            <ClassModal schoolId={school.id} slug={slug} />
+            {!isLockedOrPastDue && <ClassModal schoolId={school.id} slug={slug} />}
           </CardHeader>
           <CardContent>
             {(!classes || classes.length === 0) ? (
@@ -99,7 +115,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
                 {classes.map(c => (
                   <div key={c.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAFBFC] relative group">
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <DeleteClassButton schoolId={school.id} slug={slug} classId={c.id} />
+                      {!isLockedOrPastDue && <DeleteClassButton schoolId={school.id} slug={slug} classId={c.id} />}
                     </div>
                     <div className="font-semibold text-[15px] mb-2 text-slate-700 pr-8">{c.name}</div>
                     <div className="bg-white border border-slate-200 py-1.5 px-2.5 rounded-md font-mono text-[11px] text-slate-500 flex justify-between mt-1.5">
@@ -120,7 +136,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
             <div>
               <CardTitle>Staff Directory</CardTitle>
             </div>
-            <TeacherModal schoolId={school.id} slug={slug} classes={classes || []} />
+            {!isLockedOrPastDue && <TeacherModal schoolId={school.id} slug={slug} classes={classes || []} />}
           </CardHeader>
           <CardContent>
              {teachers.length === 0 ? (
@@ -151,9 +167,11 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
                           {t.subjects[0]}
                         </div>
                       )}
-                      <div className="ml-3">
-                        <RemoveTeacherButton schoolId={school.id} slug={slug} assignmentId={t.id} />
-                      </div>
+                      {!isLockedOrPastDue && (
+                        <div className="ml-3">
+                          <RemoveTeacherButton schoolId={school.id} slug={slug} assignmentId={t.id} />
+                        </div>
+                      )}
                     </div>
                   );
                 })}

@@ -35,9 +35,7 @@ export function RemoveTeacherButton({ schoolId, slug, assignmentId }: { schoolId
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
-            <DialogClose asChild>
-              <Button variant="outline" disabled={loading}>Cancel</Button>
-            </DialogClose>
+            <DialogClose render={<Button variant="outline" disabled={loading}>Cancel</Button>} />
             <Button variant="destructive" onClick={handleRemove} disabled={loading}>
               {loading ? "Removing..." : "Remove Teacher"}
             </Button>

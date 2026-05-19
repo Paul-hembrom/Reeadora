@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addTeacher } from "@/app/actions";
+import { Users, Plus } from "lucide-react";
 
 export function TeacherModal({ schoolId, slug, classes }: { schoolId: string, slug: string, classes: any[] }) {
   const [open, setOpen] = useState(false);
@@ -34,19 +35,29 @@ export function TeacherModal({ schoolId, slug, classes }: { schoolId: string, sl
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="secondary" disabled={classes.length === 0}>+ Add Teacher</Button>
-      </DialogTrigger>
-      <DialogContent>
+      <DialogTrigger render={
+        <Button size="sm" variant="secondary" disabled={classes.length === 0} className="gap-2 shadow-sm font-medium">
+          <Plus className="w-4 h-4" /> Add Teacher
+        </Button>
+      } />
+      <DialogContent className="sm:max-w-md border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl">
         <DialogHeader>
-          <DialogTitle>Add a Teacher</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+             <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+               <Users className="w-4 h-4" />
+             </div>
+             Add a New Teacher
+          </DialogTitle>
+          <DialogDescription>
+            Assign an existing Readora user as a teacher to a specific class.
+          </DialogDescription>
         </DialogHeader>
-        <form action={action} className="space-y-4">
+        <form action={action} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="classId">Class</Label>
+             <Label htmlFor="classId" className="text-slate-700 dark:text-slate-300">Assign to Class</Label>
             <select
               id="classId"
-              className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="flex h-11 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               value={classId}
               onChange={(e) => setClassId(e.target.value)}
               required
@@ -56,17 +67,20 @@ export function TeacherModal({ schoolId, slug, classes }: { schoolId: string, sl
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Teacher Email (Must already exist in Readora users)</Label>
-            <Input id="email" name="email" type="email" placeholder="teacher@school.com" required />
+            <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">Teacher Account Email</Label>
+            <Input id="email" name="email" type="email" placeholder="teacher@school.com" required className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800" />
+            <p className="text-[11px] text-slate-500">The teacher must already have created a Readora account.</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="subjects">Subjects (comma-separated)</Label>
-            <Input id="subjects" name="subjects" placeholder="Math, Science" />
+            <Label htmlFor="subjects" className="text-slate-700 dark:text-slate-300">Subjects <span className="text-slate-400 font-normal">(Optional)</span></Label>
+            <Input id="subjects" name="subjects" placeholder="Math, Science" className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800" />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Adding..." : "Add Teacher"}
-          </Button>
+          {error && <p className="text-red-500 text-sm font-medium bg-red-50 dark:bg-red-500/10 p-2 rounded">{error}</p>}
+          <div className="pt-2">
+            <Button type="submit" disabled={loading} className="w-full h-11 text-base shadow-sm">
+              {loading ? "Adding..." : "Add Teacher"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

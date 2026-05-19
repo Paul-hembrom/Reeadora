@@ -35,9 +35,7 @@ export function DeleteClassButton({ schoolId, slug, classId }: { schoolId: strin
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
-            <DialogClose asChild>
-              <Button variant="outline" disabled={loading}>Cancel</Button>
-            </DialogClose>
+            <DialogClose render={<Button variant="outline" disabled={loading}>Cancel</Button>} />
             <Button variant="destructive" onClick={handleDelete} disabled={loading}>
               {loading ? "Deleting..." : "Delete Class"}
             </Button>

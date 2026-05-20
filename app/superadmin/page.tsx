@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/table"
 import { BuildingIcon, Shield } from "lucide-react";
 
+import { SchoolRow } from "./school-row";
+
 export default async function SuperadminPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -34,6 +36,9 @@ export default async function SuperadminPage() {
       created_at,
       school_subscriptions (
         status, plan, trial_end_date, current_period_end
+      ),
+      school_usage (
+        videos_generated_this_month, image_searches_this_month, interactive_lessons_this_month
       ),
       school_admins (
         users (email)
@@ -67,8 +72,8 @@ export default async function SuperadminPage() {
                 <TableHead className="w-[300px]">School Details</TableHead>
                 <TableHead>Administrator</TableHead>
                 <TableHead>Plan</TableHead>
+                <TableHead>Usage Limits</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Period End</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -80,43 +85,9 @@ export default async function SuperadminPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {schools?.map((s) => {
-                const sub = Array.isArray(s.school_subscriptions) ? s.school_subscriptions[0] : s.school_subscriptions;
-                const adminEmails = s.school_admins?.map((a: any) => a.users?.email).join(", ") || "No Admin";
-                
-                return (
-                  <TableRow key={s.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span className="text-slate-900 dark:text-slate-100 font-semibold">{s.name}</span>
-                        <span className="text-xs text-slate-500 font-mono mt-0.5">{s.slug}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-slate-600 dark:text-slate-400">{adminEmails}</TableCell>
-                    <TableCell className="capitalize font-medium">{sub?.plan || 'None'}</TableCell>
-                    <TableCell>
-                      {sub?.status === 'active' && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20">Active</Badge>}
-                      {sub?.status === 'trial' && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">Trial</Badge>}
-                      {sub?.status === 'past_due' && <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">Past Due</Badge>}
-                      {sub?.status === 'locked' && <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20">Suspended</Badge>}
-                      {!sub?.status && <Badge variant="secondary">Unknown</Badge>}
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-500">
-                      {sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                       <form action={async () => {
-                         'use server';
-                         await toggleSchoolLock(s.id, sub?.status || 'active');
-                       }}>
-                         <SubmitButton size="sm" variant={sub?.status === 'locked' ? 'outline' : 'destructive'} className={sub?.status === 'locked' ? 'border-primary text-primary hover:bg-primary/10' : ''}>
-                           {sub?.status === 'locked' ? 'Restore Access' : 'Suspend'}
-                         </SubmitButton>
-                       </form>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+              {schools?.map((s) => (
+                <SchoolRow key={s.id} school={s} />
+              ))}
             </TableBody>
           </Table>
         </CardContent>

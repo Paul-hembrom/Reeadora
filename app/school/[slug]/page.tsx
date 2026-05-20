@@ -29,6 +29,8 @@ export default async function SchoolPage({ params }: { params: Promise<{ slug: s
     .select("id, name")
     .eq("school_id", school.id);
 
+  const hasInteractiveLessons = sub?.plan === 'growth' || sub?.plan === 'enterprise';
+
   return (
     <div className="space-y-12 max-w-5xl mx-auto px-4 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center w-full">
@@ -44,7 +46,39 @@ export default async function SchoolPage({ params }: { params: Promise<{ slug: s
           <p className="text-red-700/80 dark:text-red-400/80">This school's workspace is currently suspended. Please contact the administration.</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-10">
+          {/* Workspace Features Card */}
+          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 backdrop-blur-sm">
+             <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white mb-4">Workspace Features</h2>
+             <div className="flex flex-wrap gap-4">
+                <div 
+                  className={`flex flex-col p-4 rounded-2xl border ${
+                    hasInteractiveLessons 
+                      ? 'border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer' 
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/20 opacity-70 cursor-not-allowed'
+                  } w-[240px]`}
+                  title={!hasInteractiveLessons ? "Available on Growth plan." : "Launch Interactive Lesson"}
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
+                    hasInteractiveLessons
+                      ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400'
+                      : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                  }`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/><line x1="19" x2="19" y1="12" y2="12"/></svg>
+                  </div>
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100">Interactive Lessons</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">AI-guided interactive learning modules.</p>
+                  
+                  {!hasInteractiveLessons && (
+                    <div className="mt-3 text-[10px] uppercase tracking-wider font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 w-fit px-2 py-0.5 rounded">
+                      Needs Growth Plan
+                    </div>
+                  )}
+                </div>
+             </div>
+          </div>
+
+          <div className="space-y-6">
           <div className="flex items-center justify-between">
              <div>
                <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Available Classes</h2>
@@ -58,11 +92,12 @@ export default async function SchoolPage({ params }: { params: Promise<{ slug: s
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {classes.map(c => (
+               {classes.map(c => (
                 <ClassGate key={c.id} orgId={c.id} name={c.name} schoolSlug={slug} />
               ))}
             </div>
           )}
+          </div>
         </div>
       )}
     </div>

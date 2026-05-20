@@ -38,6 +38,9 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
                   </span>
                 </Link>
                 <nav className="flex items-center gap-2 sm:gap-6 text-sm font-medium">
+                   <Link href="/pricing" className="hidden sm:flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                     Pricing
+                   </Link>
                    <Link href="/join" className="hidden sm:flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                      <Building2 className="h-4 w-4" />
                      Onboard School

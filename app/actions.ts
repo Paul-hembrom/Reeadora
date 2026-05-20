@@ -332,6 +332,24 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
     return { error: "Invalid password." };
   }
 
+  // Check student limit if joining as student
+  if (role === 'student') {
+    const { data: memberRecordCheck } = await adminClient
+      .from("organization_members")
+      .select("id")
+      .eq("organization_id", classId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+      
+    // Only check limit if they are not already a member
+    if (!memberRecordCheck) {
+      const limitCheck = await checkStudentLimit(org.school_id);
+      if (!limitCheck.allowed) {
+        return { error: limitCheck.error };
+      }
+    }
+  }
+
   // Ensure member exists
   const { error: memberInsertError } = await adminClient
     .from("organization_members")
@@ -368,6 +386,145 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
   
   return { successUrl: `${readoraUrl}/auth/token-exchange?token=${token}&role=${actualRole}` };
+}
+
+export async function updateSchoolPlan(schoolId: string, newPlan: string) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user || user.email !== process.env.SUPERADMIN_EMAIL) {
+    throw new Error("Unauthorized");
+  }
+
+  const adminClient = await createAdminClient();
+  const { error: subError } = await adminClient
+    .from("school_subscriptions")
+    .update({ plan: newPlan })
+    .eq("school_id", schoolId);
+
+  if (subError) throw new Error(subError.message);
+
+  await adminClient.from("school_access_log").insert({
+    school_id: schoolId,
+    action: `plan_changed_to_${newPlan}`,
+    performed_by: user.id
+  });
+
+  revalidatePath("/superadmin");
+}
+
+export async function extendTrial(schoolId: string) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user || user.email !== process.env.SUPERADMIN_EMAIL) {
+    throw new Error("Unauthorized");
+  }
+
+  const adminClient = await createAdminClient();
+  const { data: sub } = await adminClient
+    .from("school_subscriptions")
+    .select("trial_end_date, current_period_end")
+    .eq("school_id", schoolId)
+    .single();
+
+  if (!sub) throw new Error("Subscription not found");
+
+  const newDate = new Date(sub.trial_end_date || sub.current_period_end || new Date());
+  newDate.setDate(newDate.getDate() + 7);
+
+  const { error: subError } = await adminClient
+    .from("school_subscriptions")
+    .update({ 
+      trial_end_date: newDate.toISOString(),
+      current_period_end: newDate.toISOString(),
+      status: 'trial' // Ensure it's active as trial
+    })
+    .eq("school_id", schoolId);
+
+  if (subError) throw new Error(subError.message);
+
+  await adminClient.from("school_access_log").insert({
+    school_id: schoolId,
+    action: "trial_extended_7_days",
+    performed_by: user.id
+  });
+
+  revalidatePath("/superadmin");
+}
+
+export async function resetMonthlyUsage(schoolId: string) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user || user.email !== process.env.SUPERADMIN_EMAIL) {
+    throw new Error("Unauthorized");
+  }
+
+  const adminClient = await createAdminClient();
+  const { error: usageError } = await adminClient
+    .from("school_usage")
+    .upsert({ 
+      school_id: schoolId,
+      videos_generated_this_month: 0,
+      image_searches_this_month: 0,
+      interactive_lessons_this_month: 0,
+      billing_period_start: new Date().toISOString()
+    });
+
+  if (usageError) throw new Error(usageError.message);
+
+  await adminClient.from("school_access_log").insert({
+    school_id: schoolId,
+    action: "usage_reset",
+    performed_by: user.id
+  });
+
+  revalidatePath("/superadmin");
+}
+
+export async function checkStudentLimit(schoolId: string, countToAdd: number = 1) {
+  const adminClient = await createAdminClient();
+  const { data: sub } = await adminClient
+    .from("school_subscriptions")
+    .select("plan")
+    .eq("school_id", schoolId)
+    .single();
+
+  if (!sub) return { allowed: true };
+
+  const limits: Record<string, number> = {
+    starter: 100,
+    growth: 300,
+    enterprise: Infinity
+  };
+  const limit = limits[sub.plan?.toLowerCase() || 'starter'] || 100;
+
+  if (limit === Infinity) return { allowed: true };
+
+  // Get current student count
+  // First get all class IDs for this school
+  const { data: classes } = await adminClient
+    .from("organizations")
+    .select("id")
+    .eq("school_id", schoolId);
+    
+  if (!classes || classes.length === 0) return { allowed: true };
+  const classIds = classes.map(c => c.id);
+
+  const { count } = await adminClient
+    .from("organization_members")
+    .select("id", { count: "exact", head: true })
+    .in("organization_id", classIds)
+    .eq("role", "student");
+
+  const currentCount = count || 0;
+
+  if (currentCount + countToAdd > limit) {
+    return { 
+      allowed: false, 
+      error: `Your plan allows ${limit} students. Upgrade to add more.` 
+    };
+  }
+
+  return { allowed: true };
 }
 
 export async function updateSchoolSettings(schoolId: string, slug: string, formData: FormData) {

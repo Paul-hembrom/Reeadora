@@ -381,7 +381,7 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
 
   const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
   
-  return { successUrl: `${readoraUrl}/auth/token-exchange?token=${token}&role=${actualRole}` };
+  return { successUrl: `${readoraUrl}/auth/token-exchange?token=${token}&role=${actualRole}&org_id=${classId}` };
 }
 
 export async function updateSchoolPlan(schoolId: string, newPlan: string) {
@@ -402,6 +402,30 @@ export async function updateSchoolPlan(schoolId: string, newPlan: string) {
   await adminClient.from("school_access_log").insert({
     school_id: schoolId,
     action: `plan_changed_to_${newPlan}`,
+    performed_by: user.id
+  });
+
+  revalidatePath("/superadmin");
+}
+
+export async function updateSchoolStatus(schoolId: string, newStatus: string) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user || user.email !== process.env.SUPERADMIN_EMAIL) {
+    throw new Error("Unauthorized");
+  }
+
+  const adminClient = await createAdminClient();
+  const { error: subError } = await adminClient
+    .from("school_subscriptions")
+    .update({ status: newStatus })
+    .eq("school_id", schoolId);
+
+  if (subError) throw new Error(subError.message);
+
+  await adminClient.from("school_access_log").insert({
+    school_id: schoolId,
+    action: `status_changed_to_${newStatus}`,
     performed_by: user.id
   });
 

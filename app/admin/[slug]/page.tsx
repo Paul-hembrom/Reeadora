@@ -61,8 +61,15 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
   }
 
   const subscription = await checkAndGetSubscription(school.id);
-  const isLockedOrPastDue = subscription && (subscription.status === 'locked' || subscription.status === 'past_due');
-  const whatsappUrl = `https://wa.me/+9779767697274?text=${encodeURIComponent(`Hi, I am ${user.email} from ${school.name}. I want to renew our Readora subscription.`)}`;
+  const subStatus = subscription?.status || 'active';
+  const planName = (subscription?.plan || 'Starter').charAt(0).toUpperCase() + (subscription?.plan || 'Starter').slice(1);
+  const isLockedOrPastDue = subStatus === 'locked' || subStatus === 'past_due';
+  const whatsappUrl = `https://wa.me/+9779767697274?text=${encodeURIComponent(`Hi, I am ${user.email} from ${school.name}. I want to renew/upgrade our Readora subscription.`)}`;
+  
+  let trialDaysLeft = 0;
+  if (subStatus === 'trial' && subscription?.trial_end_date) {
+    trialDaysLeft = Math.ceil((new Date(subscription.trial_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  }
 
   // Load classes
   const { data: classes } = await adminClient
@@ -105,7 +112,36 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
         </div>
       </div>
 
-      {isLockedOrPastDue && (
+      {subStatus === 'trial' && (
+        <div className="bg-blue-100/80 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-blue-800 dark:text-blue-400 px-5 py-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm backdrop-blur-sm">
+           <div className="flex items-center gap-3">
+             <div className="bg-blue-200/50 dark:bg-blue-500/20 p-2 rounded-full">
+                <ShieldCheck className="w-5 h-5" />
+             </div>
+             <div>
+               <p className="font-semibold text-sm">You are on a {planName} trial</p>
+               <p className="text-sm opacity-90">{trialDaysLeft > 0 ? `${trialDaysLeft} days remaining.` : 'Trial expired.'} Upgrade to unlock video generation and image search.</p>
+             </div>
+           </div>
+           <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Upgrade Now</a>} />
+        </div>
+      )}
+
+      {subStatus === 'active' && (
+        <div className="bg-green-100/80 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-green-800 dark:text-green-400 px-5 py-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm backdrop-blur-sm">
+           <div className="flex items-center gap-3">
+             <div className="bg-green-200/50 dark:bg-green-500/20 p-2 rounded-full">
+                <ShieldCheck className="w-5 h-5" />
+             </div>
+             <div>
+               <p className="font-semibold text-sm">{planName} Plan – Active</p>
+               <p className="text-sm opacity-90">Next billing: {subscription?.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : 'N/A'}.</p>
+             </div>
+           </div>
+        </div>
+      )}
+
+      {subStatus === 'past_due' && (
         <div className="bg-amber-100/80 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-400 px-5 py-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <div className="bg-amber-200/50 dark:bg-amber-500/20 p-2 rounded-full">
@@ -113,10 +149,25 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
             </div>
             <div>
               <p className="font-semibold text-sm">Subscription Overdue</p>
-              <p className="text-sm opacity-90">Renew now to restore full access for {school.name}.</p>
+              <p className="text-sm opacity-90">Your subscription is past due. Renew now to restore full access.</p>
             </div>
           </div>
           <Button size="sm" className="bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Renew Now</a>} />
+        </div>
+      )}
+
+      {subStatus === 'locked' && (
+        <div className="bg-red-100/80 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-800 dark:text-red-400 px-5 py-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="bg-red-200/50 dark:bg-red-500/20 p-2 rounded-full">
+               <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Account Suspended</p>
+              <p className="text-sm opacity-90">Your account has been suspended. Please contact support.</p>
+            </div>
+          </div>
+          <Button size="sm" className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Contact Support</a>} />
         </div>
       )}
 

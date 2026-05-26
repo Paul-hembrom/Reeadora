@@ -72,7 +72,8 @@ export default async function SuperadminPage() {
                 <TableHead className="w-[300px]">School Details</TableHead>
                 <TableHead>Administrator</TableHead>
                 <TableHead>Plan</TableHead>
-                <TableHead>Usage Limits</TableHead>
+                <TableHead>Trial Ends</TableHead>
+                <TableHead>Days Left</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>

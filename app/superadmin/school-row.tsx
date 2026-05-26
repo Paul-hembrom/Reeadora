@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { updateSchoolPlan, extendTrial, resetMonthlyUsage, toggleSchoolLock } from "@/app/actions";
+import { updateSchoolPlan, updateSchoolStatus, extendTrial, resetMonthlyUsage, toggleSchoolLock } from "@/app/actions";
 import { SubmitButton } from "@/components/submit-button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, CalendarPlus, RefreshCcw, Lock, Unlock, Zap, ChevronDown } from "lucide-react";
@@ -52,27 +52,32 @@ export function SchoolRow({ school }: { school: any }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>
-      <TableCell>
-        <div className="flex flex-col gap-1 text-xs">
-          <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1">
-            <span className="text-slate-500">Videos:</span>
-            <span className="font-mono font-medium">{videosUsed}/{limits.videos}</span>
-          </div>
-          <div className="flex items-center justify-between gap-2 pt-0.5">
-            <span className="text-slate-500">Images:</span>
-            <span className="font-mono font-medium">{usage?.image_searches_this_month || 0}{limits.images !== -1 ? `/${limits.images}` : ''}</span>
-          </div>
-        </div>
+      <TableCell className="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+        {sub?.trial_end_date ? new Date(sub.trial_end_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
       </TableCell>
       <TableCell>
-        {sub?.status === 'active' && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20">Active</Badge>}
-        {sub?.status === 'trial' && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">Trial</Badge>}
-        {sub?.status === 'past_due' && <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">Past Due</Badge>}
-        {sub?.status === 'locked' && <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20">Suspended</Badge>}
-        {!sub?.status && <Badge variant="secondary">Unknown</Badge>}
-        <div className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">
-          Ends {sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A'}
-        </div>
+        {(() => {
+          if (sub?.status === 'trial' && sub?.trial_end_date) {
+            const daysLeft = Math.ceil((new Date(sub.trial_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+            return daysLeft > 0 ? <span className="font-medium text-blue-600 dark:text-blue-400">{daysLeft} days</span> : <span className="text-red-500 font-medium">Expired</span>;
+          }
+          return <span className="text-slate-400">N/A</span>;
+        })()}
+      </TableCell>
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={
+            <Button variant="outline" size="sm" className="h-8 capitalize gap-1" disabled={isPending}>
+              {sub?.status || 'Unknown'} <ChevronDown className="w-3 h-3 text-slate-500" />
+            </Button>
+          } />
+          <DropdownMenuContent>
+             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolStatus(school.id, "trial"))}>Trial</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolStatus(school.id, "active"))}>Active</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolStatus(school.id, "past_due"))}>Past Due</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolStatus(school.id, "locked"))}>Locked</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </TableCell>
       <TableCell className="text-right">
          <DropdownMenu>

@@ -7,12 +7,14 @@ import { updateSchoolPlan, updateSchoolStatus, extendTrial, resetMonthlyUsage, t
 import { SubmitButton } from "@/components/submit-button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, CalendarPlus, RefreshCcw, Lock, Unlock, Zap, ChevronDown } from "lucide-react";
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 
 export function SchoolRow({ school }: { school: any }) {
   const [isPending, startTransition] = useTransition();
 
-  const sub = Array.isArray(school.school_subscriptions) ? school.school_subscriptions[0] : school.school_subscriptions;
+  const initialSub = Array.isArray(school.school_subscriptions) ? school.school_subscriptions[0] : school.school_subscriptions;
+  const [sub, setSub] = useState<any>(initialSub);
+
   const adminEmails = school.school_admins?.map((a: any) => a.users?.email).join(", ") || "No Admin";
   const usage = Array.isArray(school.school_usage) ? school.school_usage[0] : school.school_usage;
   
@@ -26,6 +28,42 @@ export function SchoolRow({ school }: { school: any }) {
   const limits = planLimits[currentPlan] || planLimits.starter;
   
   const videosUsed = usage?.videos_generated_this_month || 0;
+
+  const handleUpdatePlan = (plan: string) => {
+    startTransition(async () => {
+      try {
+        const res = await updateSchoolPlan(school.id, plan);
+        if (res?.subscription) setSub(res.subscription);
+      } catch (e) { console.error(e); }
+    });
+  };
+
+  const handleUpdateStatus = (status: string) => {
+    startTransition(async () => {
+      try {
+        const res = await updateSchoolStatus(school.id, status);
+        if (res?.subscription) setSub(res.subscription);
+      } catch (e) { console.error(e); }
+    });
+  };
+
+  const handleExtendTrial = () => {
+    startTransition(async () => {
+      try {
+        const res = await extendTrial(school.id);
+        if (res?.subscription) setSub(res.subscription);
+      } catch (e) { console.error(e); }
+    });
+  };
+
+  const handleToggleLock = () => {
+    startTransition(async () => {
+      try {
+        const res = await toggleSchoolLock(school.id, sub?.status || 'active');
+        if (res?.subscription) setSub(res.subscription);
+      } catch (e) { console.error(e); }
+    });
+  };
   
   return (
     <TableRow className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
@@ -46,9 +84,9 @@ export function SchoolRow({ school }: { school: any }) {
             </Button>
           } />
           <DropdownMenuContent>
-             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolPlan(school.id, "starter"))}>Starter</DropdownMenuItem>
-             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolPlan(school.id, "growth"))}>Growth</DropdownMenuItem>
-             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolPlan(school.id, "enterprise"))}>Enterprise</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdatePlan("starter")}>Starter</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdatePlan("growth")}>Growth</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdatePlan("enterprise")}>Enterprise</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>
@@ -72,10 +110,10 @@ export function SchoolRow({ school }: { school: any }) {
             </Button>
           } />
           <DropdownMenuContent>
-             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolStatus(school.id, "trial"))}>Trial</DropdownMenuItem>
-             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolStatus(school.id, "active"))}>Active</DropdownMenuItem>
-             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolStatus(school.id, "past_due"))}>Past Due</DropdownMenuItem>
-             <DropdownMenuItem onClick={() => startTransition(() => updateSchoolStatus(school.id, "locked"))}>Locked</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdateStatus("trial")}>Trial</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdateStatus("active")}>Active</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdateStatus("past_due")}>Past Due</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdateStatus("locked")}>Locked</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>
@@ -87,14 +125,14 @@ export function SchoolRow({ school }: { school: any }) {
               </Button>
            } />
            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => startTransition(() => extendTrial(school.id))}>
+              <DropdownMenuItem onClick={handleExtendTrial}>
                 <CalendarPlus className="w-4 h-4 mr-2 text-blue-500" /> Extend Trial (+7 days)
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => startTransition(() => resetMonthlyUsage(school.id))}>
                 <RefreshCcw className="w-4 h-4 mr-2 text-amber-500" /> Reset Monthly Usage
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => startTransition(() => toggleSchoolLock(school.id, sub?.status || 'active'))}
+                onClick={handleToggleLock}
                 className={sub?.status === 'locked' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}
               >
                 {sub?.status === 'locked' ? (

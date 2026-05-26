@@ -121,10 +121,35 @@ export async function toggleSchoolLock(schoolId: string, currentStatus: string) 
     updateData.current_period_end = nextMonth.toISOString();
   }
 
-  const { error: subError } = await adminClient
+  const { data: existing } = await adminClient
     .from("school_subscriptions")
-    .update(updateData)
-    .eq("school_id", schoolId);
+    .select("id")
+    .eq("school_id", schoolId)
+    .maybeSingle();
+
+  let subError;
+  let updatedSub;
+
+  if (existing) {
+    const { data: ud, error: ue } = await adminClient
+      .from("school_subscriptions")
+      .update(updateData)
+      .eq("school_id", schoolId)
+      .select()
+      .single();
+    subError = ue;
+    updatedSub = ud;
+  } else {
+    updateData.school_id = schoolId;
+    updateData.plan = 'starter';
+    const { data: id, error: ie } = await adminClient
+      .from("school_subscriptions")
+      .insert(updateData)
+      .select()
+      .single();
+    subError = ie;
+    updatedSub = id;
+  }
 
   if (subError) throw new Error(subError.message);
 
@@ -135,6 +160,7 @@ export async function toggleSchoolLock(schoolId: string, currentStatus: string) 
   });
 
   revalidatePath("/superadmin");
+  return { subscription: updatedSub };
 }
 
 export async function checkAndGetSubscription(schoolId: string) {
@@ -392,10 +418,33 @@ export async function updateSchoolPlan(schoolId: string, newPlan: string) {
   }
 
   const adminClient = await createAdminClient();
-  const { error: subError } = await adminClient
+  const { data: existing } = await adminClient
     .from("school_subscriptions")
-    .update({ plan: newPlan })
-    .eq("school_id", schoolId);
+    .select("id")
+    .eq("school_id", schoolId)
+    .maybeSingle();
+
+  let subError;
+  let updatedSub;
+
+  if (existing) {
+    const { data: ud, error: ue } = await adminClient
+      .from("school_subscriptions")
+      .update({ plan: newPlan })
+      .eq("school_id", schoolId)
+      .select()
+      .single();
+    subError = ue;
+    updatedSub = ud;
+  } else {
+    const { data: id, error: ie } = await adminClient
+      .from("school_subscriptions")
+      .insert({ school_id: schoolId, plan: newPlan, status: 'active' })
+      .select()
+      .single();
+    subError = ie;
+    updatedSub = id;
+  }
 
   if (subError) throw new Error(subError.message);
 
@@ -406,6 +455,7 @@ export async function updateSchoolPlan(schoolId: string, newPlan: string) {
   });
 
   revalidatePath("/superadmin");
+  return { subscription: updatedSub };
 }
 
 export async function updateSchoolStatus(schoolId: string, newStatus: string) {
@@ -416,10 +466,33 @@ export async function updateSchoolStatus(schoolId: string, newStatus: string) {
   }
 
   const adminClient = await createAdminClient();
-  const { error: subError } = await adminClient
+  const { data: existing } = await adminClient
     .from("school_subscriptions")
-    .update({ status: newStatus })
-    .eq("school_id", schoolId);
+    .select("id")
+    .eq("school_id", schoolId)
+    .maybeSingle();
+
+  let subError;
+  let updatedSub;
+
+  if (existing) {
+    const { data: ud, error: ue } = await adminClient
+      .from("school_subscriptions")
+      .update({ status: newStatus })
+      .eq("school_id", schoolId)
+      .select()
+      .single();
+    subError = ue;
+    updatedSub = ud;
+  } else {
+    const { data: id, error: ie } = await adminClient
+      .from("school_subscriptions")
+      .insert({ school_id: schoolId, plan: 'starter', status: newStatus })
+      .select()
+      .single();
+    subError = ie;
+    updatedSub = id;
+  }
 
   if (subError) throw new Error(subError.message);
 
@@ -430,6 +503,7 @@ export async function updateSchoolStatus(schoolId: string, newStatus: string) {
   });
 
   revalidatePath("/superadmin");
+  return { subscription: updatedSub };
 }
 
 export async function extendTrial(schoolId: string) {
@@ -442,23 +516,44 @@ export async function extendTrial(schoolId: string) {
   const adminClient = await createAdminClient();
   const { data: sub } = await adminClient
     .from("school_subscriptions")
-    .select("trial_end_date, current_period_end")
+    .select("id, trial_end_date, current_period_end")
     .eq("school_id", schoolId)
-    .single();
+    .maybeSingle();
 
-  if (!sub) throw new Error("Subscription not found");
-
-  const newDate = new Date(sub.trial_end_date || sub.current_period_end || new Date());
+  const newDate = new Date(sub?.trial_end_date || sub?.current_period_end || new Date());
   newDate.setDate(newDate.getDate() + 7);
 
-  const { error: subError } = await adminClient
-    .from("school_subscriptions")
-    .update({ 
-      trial_end_date: newDate.toISOString(),
-      current_period_end: newDate.toISOString(),
-      status: 'trial' // Ensure it's active as trial
-    })
-    .eq("school_id", schoolId);
+  let subError;
+  let updatedSub;
+
+  if (sub) {
+    const { data: ud, error: ue } = await adminClient
+      .from("school_subscriptions")
+      .update({ 
+        trial_end_date: newDate.toISOString(),
+        current_period_end: newDate.toISOString(),
+        status: 'trial'
+      })
+      .eq("school_id", schoolId)
+      .select()
+      .single();
+    subError = ue;
+    updatedSub = ud;
+  } else {
+    const { data: id, error: ie } = await adminClient
+      .from("school_subscriptions")
+      .insert({ 
+        school_id: schoolId, 
+        plan: 'starter',
+        status: 'trial',
+        trial_end_date: newDate.toISOString(),
+        current_period_end: newDate.toISOString()
+      })
+      .select()
+      .single();
+    subError = ie;
+    updatedSub = id;
+  }
 
   if (subError) throw new Error(subError.message);
 
@@ -469,6 +564,7 @@ export async function extendTrial(schoolId: string) {
   });
 
   revalidatePath("/superadmin");
+  return { subscription: updatedSub };
 }
 
 export async function resetMonthlyUsage(schoolId: string) {

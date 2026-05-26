@@ -21,7 +21,7 @@ export default async function SuperadminPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   const superadminEmail = process.env.SUPERADMIN_EMAIL;
-  if (!user || user.email !== superadminEmail) {
+  if (!user || !user.email || !superadminEmail || user.email.toLowerCase() !== superadminEmail.toLowerCase()) {
     redirect("/");
   }
 

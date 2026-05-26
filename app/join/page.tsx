@@ -33,7 +33,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
   }
 
   const superadminEmail = process.env.SUPERADMIN_EMAIL;
-  if (user && user.email === superadminEmail) {
+  if (user && user.email && superadminEmail && user.email.toLowerCase() === superadminEmail.toLowerCase()) {
     redirect("/superadmin");
   }
 

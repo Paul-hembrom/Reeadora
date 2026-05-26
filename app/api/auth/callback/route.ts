@@ -17,6 +17,17 @@ export async function GET(request: Request) {
       
       const { user } = authData
       
+      // Superadmin check
+      const superadminEmail = process.env.SUPERADMIN_EMAIL;
+      let finalNext = next;
+      if (
+        superadminEmail &&
+        user.email &&
+        user.email.toLowerCase() === superadminEmail.toLowerCase()
+      ) {
+        finalNext = '/superadmin';
+      }
+
       const { data: existingUser } = await adminSupabase
         .from('users')
         .select('id')
@@ -36,7 +47,7 @@ export async function GET(request: Request) {
         }
       }
       
-      const nextUrl = new URL(next, origin)
+      const nextUrl = new URL(finalNext, origin)
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'
       

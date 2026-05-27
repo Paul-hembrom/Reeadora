@@ -607,11 +607,12 @@ export async function checkStudentLimit(schoolId: string, countToAdd: number = 1
   if (!sub) return { allowed: true };
 
   const limits: Record<string, number> = {
-    starter: 100,
-    growth: 300,
+    essentials: Infinity,
+    starter: Infinity,
+    growth: Infinity,
     enterprise: Infinity
   };
-  const limit = limits[sub.plan?.toLowerCase() || 'starter'] || 100;
+  const limit = limits[sub.plan?.toLowerCase() || 'starter'] || Infinity;
 
   if (limit === Infinity) return { allowed: true };
 

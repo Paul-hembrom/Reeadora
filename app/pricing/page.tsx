@@ -13,6 +13,25 @@ export default function PricingPage() {
 
   const plans = [
     {
+      name: "Essentials",
+      description: "Most affordable plan for growing schools.",
+      price: {
+        USD: { annual: 990, monthly: 99 },
+        NPR: { annual: 132660, monthly: 13266 },
+      },
+      features: [
+        "Unlimited students",
+        "Unlimited book uploads",
+        "Full AI chat",
+        "YouTube video embed",
+        "Image discovery"
+      ],
+      icon: <Sparkles className="h-6 w-6 text-emerald-500" />,
+      ctaText: "Start Free Trial",
+      ctaLink: "/join",
+      highlighted: false,
+    },
+    {
       name: "Starter",
       description: "Perfect for small schools just getting started.",
       price: {
@@ -20,7 +39,7 @@ export default function PricingPage() {
         NPR: { annual: 234500, monthly: null },
       },
       features: [
-        "Up to 100 students",
+        "Unlimited students",
         "10 AI videos/month",
         "Basic analytics",
         "Chat support",
@@ -38,7 +57,7 @@ export default function PricingPage() {
         NPR: { annual: 562800, monthly: 56280 },
       },
       features: [
-        "Up to 300 students",
+        "Unlimited students",
         "25 AI videos/month",
         "Image discovery",
         "Interactive lessons",
@@ -58,7 +77,7 @@ export default function PricingPage() {
         NPR: { annual: 1139000, monthly: null },
       },
       features: [
-        "500+ students",
+        "Unlimited students",
         "50 AI videos/month",
         "Custom integrations",
         "Dedicated support",
@@ -142,7 +161,7 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
+      <div className="grid lg:grid-cols-4 gap-6 max-w-7xl mx-auto items-stretch">
         {plans.map((plan, idx) => {
           const isAnnual = billingCycle === "annual";
           const currentPrice = isAnnual ? plan.price[currency].annual : plan.price[currency].monthly;
@@ -234,7 +253,8 @@ export default function PricingPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800">
-                <th className="p-4 sm:p-6 font-semibold text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-900/50 w-1/3">Features</th>
+                <th className="p-4 sm:p-6 font-semibold text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-900/50 w-1/4">Features</th>
+                <th className="p-4 sm:p-6 font-semibold text-center text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-900/50">Essentials</th>
                 <th className="p-4 sm:p-6 font-semibold text-center text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-900/50">Starter</th>
                 <th className="p-4 sm:p-6 font-semibold text-center text-indigo-600 dark:text-indigo-400 bg-indigo-50/30 dark:bg-indigo-500/5">Growth</th>
                 <th className="p-4 sm:p-6 font-semibold text-center text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-900/50">Enterprise</th>
@@ -243,12 +263,14 @@ export default function PricingPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
               <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                 <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">Students Included</td>
-                <td className="p-4 text-center text-slate-500 dark:text-slate-400">100</td>
-                <td className="p-4 text-center font-semibold text-slate-900 dark:text-white">300</td>
-                <td className="p-4 text-center text-slate-500 dark:text-slate-400">500+</td>
+                <td className="p-4 text-center text-slate-500 dark:text-slate-400">Unlimited</td>
+                <td className="p-4 text-center text-slate-500 dark:text-slate-400">Unlimited</td>
+                <td className="p-4 text-center font-semibold text-slate-900 dark:text-white">Unlimited</td>
+                <td className="p-4 text-center text-slate-500 dark:text-slate-400">Unlimited</td>
               </tr>
               <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                 <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">AI Videos per month</td>
+                <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
                 <td className="p-4 text-center text-slate-500 dark:text-slate-400">10</td>
                 <td className="p-4 text-center font-semibold text-slate-900 dark:text-white">25</td>
                 <td className="p-4 text-center text-slate-500 dark:text-slate-400">50</td>
@@ -256,23 +278,27 @@ export default function PricingPage() {
               <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                 <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">Analytics</td>
                 <td className="p-4 text-center text-slate-500 dark:text-slate-400">Basic</td>
+                <td className="p-4 text-center text-slate-500 dark:text-slate-400">Basic</td>
                 <td className="p-4 text-center font-semibold text-slate-900 dark:text-white">Advanced</td>
                 <td className="p-4 text-center text-slate-500 dark:text-slate-400">Custom</td>
               </tr>
               <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                 <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">Support</td>
                 <td className="p-4 text-center text-slate-500 dark:text-slate-400">Chat</td>
+                <td className="p-4 text-center text-slate-500 dark:text-slate-400">Chat</td>
                 <td className="p-4 text-center font-semibold text-slate-900 dark:text-white">Priority</td>
                 <td className="p-4 text-center text-slate-500 dark:text-slate-400">Dedicated</td>
               </tr>
               <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                 <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">Image Discovery</td>
+                <td className="p-4 text-center"><Check className="w-5 h-5 mx-auto text-green-500" /></td>
                 <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
                 <td className="p-4 text-center"><Check className="w-5 h-5 mx-auto text-green-500" /></td>
                 <td className="p-4 text-center"><Check className="w-5 h-5 mx-auto text-green-500" /></td>
               </tr>
               <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                 <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">Interactive Lessons</td>
+                <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
                 <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
                 <td className="p-4 text-center"><Check className="w-5 h-5 mx-auto text-green-500" /></td>
                 <td className="p-4 text-center"><Check className="w-5 h-5 mx-auto text-green-500" /></td>
@@ -281,10 +307,12 @@ export default function PricingPage() {
                 <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">API Access</td>
                 <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
                 <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
+                <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
                 <td className="p-4 text-center"><Check className="w-5 h-5 mx-auto text-green-500" /></td>
               </tr>
               <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                 <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">Custom Integrations</td>
+                <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
                 <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
                 <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
                 <td className="p-4 text-center"><Check className="w-5 h-5 mx-auto text-green-500" /></td>

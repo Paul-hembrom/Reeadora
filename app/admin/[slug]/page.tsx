@@ -136,6 +136,11 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
              <div>
                <p className="font-semibold text-sm">{planName} Plan – Active</p>
                <p className="text-sm opacity-90">Next billing: {subscription?.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : 'N/A'}.</p>
+               {subscription?.plan === 'essentials' && (
+                 <p className="text-sm font-medium mt-1 text-green-700 dark:text-green-400">
+                   Upgrade to Starter for video lessons & interactive teaching.
+                 </p>
+               )}
              </div>
            </div>
         </div>

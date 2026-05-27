@@ -19,6 +19,7 @@ export function SchoolRow({ school }: { school: any }) {
   const usage = Array.isArray(school.school_usage) ? school.school_usage[0] : school.school_usage;
   
   const planLimits: Record<string, { videos: number, images: number }> = {
+    essentials: { videos: 0, images: -1 },
     starter: { videos: 10, images: 0 },
     growth: { videos: 25, images: -1 }, // -1 implies not strictly limited or depends on plan
     enterprise: { videos: 50, images: -1 }
@@ -84,6 +85,7 @@ export function SchoolRow({ school }: { school: any }) {
             </Button>
           } />
           <DropdownMenuContent>
+             <DropdownMenuItem onClick={() => handleUpdatePlan("essentials")}>Essentials</DropdownMenuItem>
              <DropdownMenuItem onClick={() => handleUpdatePlan("starter")}>Starter</DropdownMenuItem>
              <DropdownMenuItem onClick={() => handleUpdatePlan("growth")}>Growth</DropdownMenuItem>
              <DropdownMenuItem onClick={() => handleUpdatePlan("enterprise")}>Enterprise</DropdownMenuItem>

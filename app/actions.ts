@@ -302,7 +302,7 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
     }
     
     revalidatePath(`/admin/${slug}`);
-    return { success: true, message: "Invitation sent. The teacher will be added automatically when they next log in." };
+    return { success: true, message: `Teacher will be added automatically when they sign in with ${email} at this school's portal.` };
   }
 
   const { error: memberError } = await adminClient
@@ -322,7 +322,7 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
   }
 
   revalidatePath(`/admin/${slug}`);
-  return { success: true };
+  return { success: true, message: "Teacher added successfully." };
 }
 
 export async function revokeInvitation(schoolId: string, slug: string, invitationId: string): Promise<{error?: string, success?: boolean}> {

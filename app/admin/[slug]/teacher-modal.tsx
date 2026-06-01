@@ -56,7 +56,7 @@ export function TeacherModal({ schoolId, slug, classes }: { schoolId: string, sl
              Add a New Teacher
           </DialogTitle>
           <DialogDescription>
-            Assign an existing Readora user as a teacher to a specific class.
+            Assign a teacher to a specific class. If they do not have an account, an invitation will be created.
           </DialogDescription>
         </DialogHeader>
         <form action={action} className="space-y-4 pt-4">
@@ -74,9 +74,9 @@ export function TeacherModal({ schoolId, slug, classes }: { schoolId: string, sl
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">Teacher Account Email</Label>
+            <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">Teacher Email</Label>
             <Input id="email" name="email" type="email" placeholder="teacher@school.com" required className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800" />
-            <p className="text-[11px] text-slate-500">The teacher must already have created a Readora account.</p>
+            <p className="text-[11px] text-slate-500">Invitation will be sent if they don&apos;t have an account yet.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="subjects" className="text-slate-700 dark:text-slate-300">Subjects <span className="text-slate-400 font-normal">(Optional)</span></Label>

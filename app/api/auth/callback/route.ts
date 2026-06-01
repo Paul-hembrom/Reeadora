@@ -56,11 +56,20 @@ export async function GET(request: Request) {
 
         if (invitations && invitations.length > 0) {
           for (const inv of invitations) {
-            await adminSupabase.from('organization_members').insert({
-              organization_id: inv.org_id,
-              user_id: user.id,
-              role: 'teacher'
-            });
+            const { data: existingMember } = await adminSupabase
+              .from('organization_members')
+              .select('id')
+              .eq('organization_id', inv.org_id)
+              .eq('user_id', user.id)
+              .maybeSingle();
+
+            if (!existingMember) {
+              await adminSupabase.from('organization_members').insert({
+                organization_id: inv.org_id,
+                user_id: user.id,
+                role: 'teacher'
+              });
+            }
 
             await adminSupabase.from('teacher_assignments').insert({
               teacher_user_id: user.id,

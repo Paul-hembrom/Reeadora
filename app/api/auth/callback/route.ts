@@ -28,6 +28,57 @@ export async function GET(request: Request) {
         finalNext = '/superadmin';
       }
 
+      const initialNextUrl = new URL(finalNext, origin);
+      const joinToken = initialNextUrl.searchParams.get('join_token');
+      if (joinToken) {
+        const { jwtVerify, SignJWT } = await import('jose');
+        try {
+          const jwtSecret = process.env.JWT_SECRET;
+          if (!jwtSecret) throw new Error("JWT_SECRET is not configured on server");
+          
+          const { payload } = await jwtVerify(joinToken, new TextEncoder().encode(jwtSecret));
+          const orgId = payload.org_id as string;
+          const role = payload.role as string;
+          
+          if (orgId && role) {
+            // Upsert member
+            const { data: memberRecordCheck } = await adminSupabase
+              .from("organization_members")
+              .select("id")
+              .eq("organization_id", orgId)
+              .eq("user_id", user.id)
+              .maybeSingle();
+
+            if (!memberRecordCheck) {
+              await adminSupabase.from('organization_members').insert({
+                organization_id: orgId,
+                user_id: user.id,
+                role
+              });
+            }
+
+            const { data: memberRecord } = await adminSupabase
+              .from("organization_members")
+              .select("role")
+              .eq("organization_id", orgId)
+              .eq("user_id", user.id)
+              .maybeSingle();
+
+            const actualRole = memberRecord?.role || role;
+
+            const token = await new SignJWT({ user_id: user.id, org_id: orgId, role: actualRole })
+              .setProtectedHeader({ alg: 'HS256' })
+              .setExpirationTime('7d')
+              .sign(new TextEncoder().encode(jwtSecret));
+
+            const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
+            finalNext = `${readoraUrl}/auth/token-exchange?token=${token}&role=${actualRole}&org_id=${orgId}`;
+          }
+        } catch (e) {
+          console.error("Invalid join_token", e);
+        }
+      }
+
       const { data: existingUser } = await adminSupabase
         .from('users')
         .select('id')

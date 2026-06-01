@@ -18,6 +18,7 @@ export function ClassGate({ orgId, name, schoolSlug }: { orgId: string, name: st
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [authNeeded, setAuthNeeded] = useState(false);
+  const [joinToken, setJoinToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +31,9 @@ export function ClassGate({ orgId, name, schoolSlug }: { orgId: string, name: st
       
       if (res.error === 'Not_Logged_In') {
         // They need to log in first
+        if (res.joinToken) {
+          setJoinToken(res.joinToken);
+        }
         setAuthNeeded(true);
         return;
       }
@@ -98,7 +102,7 @@ export function ClassGate({ orgId, name, schoolSlug }: { orgId: string, name: st
                     Connect your account to enter the classroom space.
                  </p>
               </div>
-              <GoogleLoginButton nextUrl={`/school/${schoolSlug}`} />
+              <GoogleLoginButton nextUrl={joinToken ? `/api/auth/callback?join_token=${joinToken}` : `/school/${schoolSlug}`} />
             </div>
           ) : (
              <div className="space-y-6 mt-4">

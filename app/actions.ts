@@ -346,24 +346,7 @@ export async function resendInvitation(schoolId: string, slug: string, invitatio
 }
 
 export async function joinClass(classId: string, role: 'teacher' | 'student', passwordAttempt: string) {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) {
-    return { error: 'Not_Logged_In' };
-  }
-
   const adminClient = await createAdminClient();
-
-  // Sync user to public.users to satisfy foreign key
-  const { data: existingUser } = await adminClient.from("users").select("id").eq("id", user.id).maybeSingle();
-  if (!existingUser) {
-    await adminClient.from("users").insert({
-      id: user.id,
-      name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Unknown User',
-      email: user.email,
-      password_hash: '',
-    });
-  }
 
   const { data: org } = await adminClient
     .from("organizations")
@@ -386,6 +369,32 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
 
   if (!isValid) {
     return { error: "Invalid password." };
+  }
+
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) throw new Error("JWT_SECRET is not configured on server");
+
+    const joinToken = await new SignJWT({ org_id: classId, role, purpose: 'gate_passed' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('1h')
+      .sign(new TextEncoder().encode(jwtSecret));
+
+    return { error: 'Not_Logged_In', joinToken };
+  }
+
+  // Sync user to public.users to satisfy foreign key
+  const { data: existingUser } = await adminClient.from("users").select("id").eq("id", user.id).maybeSingle();
+  if (!existingUser) {
+    await adminClient.from("users").insert({
+      id: user.id,
+      name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Unknown User',
+      email: user.email,
+      password_hash: '',
+    });
   }
 
   // Check student limit if joining as student

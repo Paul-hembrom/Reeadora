@@ -47,6 +47,34 @@ export async function GET(request: Request) {
         }
       }
       
+      if (user.email) {
+        const { data: invitations } = await adminSupabase
+          .from('teacher_invitations')
+          .select('*')
+          .eq('email', user.email)
+          .eq('status', 'pending');
+
+        if (invitations && invitations.length > 0) {
+          for (const inv of invitations) {
+            await adminSupabase.from('organization_members').insert({
+              organization_id: inv.org_id,
+              user_id: user.id,
+              role: 'teacher'
+            });
+
+            await adminSupabase.from('teacher_assignments').insert({
+              teacher_user_id: user.id,
+              org_id: inv.org_id,
+              subjects: inv.subjects
+            });
+
+            await adminSupabase.from('teacher_invitations').update({
+              status: 'accepted'
+            }).eq('id', inv.id);
+          }
+        }
+      }
+
       const nextUrl = new URL(finalNext, origin)
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'

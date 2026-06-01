@@ -24,7 +24,14 @@ export function TeacherModal({ schoolId, slug, classes }: { schoolId: string, sl
     setLoading(true);
     setError("");
     try {
-      await addTeacher(schoolId, slug, classId, formData);
+      const res = await addTeacher(schoolId, slug, classId, formData);
+      if (res && res.error) {
+        setError(res.error);
+        return;
+      }
+      if (res && res.message) {
+        alert(res.message);
+      }
       setOpen(false);
     } catch (err: any) {
       setError(err.message || "Failed to add teacher");

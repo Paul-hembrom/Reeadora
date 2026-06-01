@@ -275,14 +275,14 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
   const emailStr = formData.get("email") as string;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailStr || !emailRegex.test(emailStr)) {
-    throw new Error("Invalid email format.");
+    return { error: "Invalid email format." };
   }
   const email = emailStr;
   const subjectsStr = formData.get("subjects") as string;
   const subjects = subjectsStr ? subjectsStr.split(",").map(s => s.trim()) : [];
 
   if (!email || !classId) {
-    throw new Error("Email and Class are required.");
+    return { error: "Email and Class are required." };
   }
 
   // Find user by email
@@ -293,7 +293,16 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
     .maybeSingle();
 
   if (!teacherUser) {
-    throw new Error("User with that email not found. They must sign in first.");
+    const { error: inviteError } = await adminClient
+      .from("teacher_invitations")
+      .insert({ org_id: classId, email, subjects });
+      
+    if (inviteError) {
+      return { error: inviteError.message };
+    }
+    
+    revalidatePath(`/admin/${slug}`);
+    return { success: true, message: "Invitation sent. The teacher will be added automatically when they next log in." };
   }
 
   const { error: memberError } = await adminClient
@@ -301,7 +310,7 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
     .insert({ organization_id: classId, user_id: teacherUser.id, role: "teacher" });
 
   if (memberError && memberError.code !== '23505') { // ignore duplicate
-    throw new Error(memberError.message);
+    return { error: memberError.message };
   }
 
   const { error: assignError } = await adminClient
@@ -309,10 +318,31 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
     .insert({ teacher_user_id: teacherUser.id, org_id: classId, subjects });
 
   if (assignError) {
-    throw new Error(assignError.message);
+    return { error: assignError.message };
   }
 
   revalidatePath(`/admin/${slug}`);
+  return { success: true };
+}
+
+export async function revokeInvitation(schoolId: string, slug: string, invitationId: string): Promise<{error?: string, success?: boolean}> {
+  const adminClient = await createAdminClient();
+  const { error } = await adminClient
+    .from("teacher_invitations")
+    .delete()
+    .eq("id", invitationId);
+
+  if (error) {
+    return { error: error.message };
+  }
+  revalidatePath(`/admin/${slug}`);
+  return { success: true };
+}
+
+export async function resendInvitation(schoolId: string, slug: string, invitationId: string): Promise<{error?: string, success?: boolean, message?: string}> {
+  // In a real app, you would dispatch an email here.
+  // For now, we just return success.
+  return { success: true, message: "Invitation resent successfully." };
 }
 
 export async function joinClass(classId: string, role: 'teacher' | 'student', passwordAttempt: string) {

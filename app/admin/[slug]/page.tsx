@@ -7,6 +7,7 @@ import { ClassModal } from "./class-modal";
 import { TeacherModal } from "./teacher-modal";
 import { DeleteClassButton } from "./delete-class-button";
 import { RemoveTeacherButton } from "./remove-teacher-button";
+import { PendingInvitationActions } from "./pending-invitation-actions";
 import Link from "next/link";
 import { checkAndGetSubscription } from "@/app/actions";
 import { BookOpen, Users, Key, AlertTriangle, ShieldCheck, Mail, LogOut, Settings } from "lucide-react";
@@ -81,6 +82,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
   const orgIds = classes?.map(c => c.id) || [];
   
   let teachers: any[] = [];
+  let pendingInvitations: any[] = [];
   if (orgIds.length > 0) {
     const { data: teacherAssignments } = await adminClient
       .from("teacher_assignments")
@@ -88,10 +90,18 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
       .in("org_id", orgIds);
       
     teachers = teacherAssignments || [];
+    
+    const { data: invitations } = await adminClient
+      .from("teacher_invitations")
+      .select("*, organizations:org_id (name)")
+      .in("org_id", orgIds)
+      .eq("status", "pending");
+      
+    pendingInvitations = invitations || [];
   }
 
   // Calculate unique teachers manually
-  const uniqueTeacherCount = new Set(teachers.map(t => t.teacher_user_id)).size;
+  const uniqueTeacherCount = new Set(teachers.map(t => t.teacher_user_id)).size + new Set(pendingInvitations.map(inv => inv.email)).size;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -272,7 +282,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
            </div>
            <Card className="border-slate-200/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
              <CardContent className="p-0">
-               {teachers.length === 0 ? (
+               {(teachers.length === 0 && pendingInvitations.length === 0) ? (
                 <div className="p-8 text-center text-slate-500 text-sm border-dashed border-2 border-slate-200 dark:border-slate-800 m-4 rounded-xl">
                   No teachers assigned.
                 </div>
@@ -309,6 +319,37 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
                         {!isLockedOrPastDue && (
                           <div className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
                             <RemoveTeacherButton schoolId={school.id} slug={slug} assignmentId={t.id} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {pendingInvitations.map((inv, idx) => {
+                    const initial = (inv.email || 'U')[0].toUpperCase();
+                    return (
+                      <div key={inv.id} className="flex items-center py-4 px-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+                        <div className={`w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mr-4 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-200 border-dashed dark:border-slate-700`}>
+                          {initial}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[14px] font-semibold text-slate-800 dark:text-slate-100 truncate italic">Pending Invite</div>
+                          <div className="text-[12px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
+                             <Mail className="w-3 h-3" /> {inv.email}
+                          </div>
+                          {inv.organizations?.name && (
+                            <div className="mt-1 flex items-center gap-2">
+                              <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                {inv.organizations.name}
+                              </Badge>
+                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 font-medium text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800/50 dark:text-amber-400">
+                                Pending
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                        {!isLockedOrPastDue && (
+                          <div className="ml-3 transition-opacity">
+                            <PendingInvitationActions schoolId={school.id} slug={slug} invitationId={inv.id} />
                           </div>
                         )}
                       </div>

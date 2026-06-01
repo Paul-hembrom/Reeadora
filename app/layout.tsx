@@ -14,6 +14,18 @@ const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 export const metadata: Metadata = {
   title: 'Readora Schools',
   description: 'Gateway for Readora Schools',
+  icons: {
+    icon: [
+      {
+        url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234F46E5'/%3E%3Cpath d='M50 25L20 40L50 55L80 40Z M25 45V60L50 75L75 60V45L50 60Z' fill='white'/%3E%3C/svg%3E",
+        type: "image/svg+xml",
+      },
+      {
+        url: "/favicon.ico",
+        sizes: "any",
+      }
+    ],
+  },
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {

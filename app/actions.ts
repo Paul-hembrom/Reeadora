@@ -397,6 +397,29 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
     });
   }
 
+  if (role === 'teacher' && user.email) {
+    const { data: invitations } = await adminClient
+      .from('teacher_invitations')
+      .select('*')
+      .eq('email', user.email)
+      .eq('org_id', classId)
+      .eq('status', 'pending');
+
+    if (invitations && invitations.length > 0) {
+      for (const inv of invitations) {
+        await adminClient.from('teacher_assignments').insert({
+          teacher_user_id: user.id,
+          org_id: inv.org_id,
+          subjects: inv.subjects
+        });
+
+        await adminClient.from('teacher_invitations').update({
+          status: 'accepted'
+        }).eq('id', inv.id);
+      }
+    }
+  }
+
   // Check student limit if joining as student
   if (role === 'student') {
     const { data: memberRecordCheck } = await adminClient

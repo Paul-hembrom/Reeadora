@@ -17,25 +17,32 @@ export function ClassGate({ orgId, name, schoolSlug }: { orgId: string, name: st
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [authNeeded, setAuthNeeded] = useState(false);
   const [joinToken, setJoinToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setAuthNeeded(false);
 
     try {
       const res = await joinClass(orgId, role, password);
       
       if (res.error === 'Not_Logged_In') {
-        // They need to log in first
-        if (res.joinToken) {
-          setJoinToken(res.joinToken);
+        const tokenToUse = res.joinToken || joinToken;
+        if (tokenToUse) {
+          const { createClient } = await import('@/utils/supabase/client');
+          const supabase = createClient();
+          const nextUrl = `/api/auth/callback?join_token=${tokenToUse}`;
+          const redirectTo = `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(nextUrl)}`;
+          
+          await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo,
+            },
+          });
+          return;
         }
-        setAuthNeeded(true);
-        return;
       }
       
       if (res.error) {
@@ -94,17 +101,6 @@ export function ClassGate({ orgId, name, schoolSlug }: { orgId: string, name: st
             </DialogDescription>
           </DialogHeader>
 
-          {authNeeded ? (
-            <div className="space-y-6 pt-4">
-              <div className="p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-xl">
-                 <p className="text-sm text-indigo-800 dark:text-indigo-300 font-medium flex items-center gap-2">
-                    <LogOut className="w-4 h-4 shrink-0" />
-                    Connect your account to enter the classroom space.
-                 </p>
-              </div>
-              <GoogleLoginButton nextUrl={joinToken ? `/api/auth/callback?join_token=${joinToken}` : `/school/${schoolSlug}`} />
-            </div>
-          ) : (
              <div className="space-y-6 mt-4">
                 <div className="flex bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-[12px] border border-slate-200 dark:border-slate-700 shadow-inner">
                   <button 
@@ -153,8 +149,7 @@ export function ClassGate({ orgId, name, schoolSlug }: { orgId: string, name: st
                     {loading ? "Authenticating..." : "Enter Classroom"}
                   </Button>
                 </form>
-             </div>
-          )}
+              </div>
         </DialogContent>
       </Dialog>
     </>

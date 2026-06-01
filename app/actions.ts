@@ -458,18 +458,16 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
 
   const actualRole = memberRecord?.role || role;
 
-  // generate JWT
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) throw new Error("JWT_SECRET is not configured on server");
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
 
-  const token = await new SignJWT({ user_id: user.id, org_id: classId, role: actualRole })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('7d')
-    .sign(new TextEncoder().encode(jwtSecret));
+  if (!accessToken) {
+    return { error: "Action requires an active session." };
+  }
 
   const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
   
-  return { successUrl: `${readoraUrl}/auth/token-exchange?token=${token}&role=${actualRole}&org_id=${classId}` };
+  return { successUrl: `${readoraUrl}/auth/token-exchange?access_token=${accessToken}&role=${actualRole}&org_id=${classId}` };
 }
 
 export async function updateSchoolPlan(schoolId: string, newPlan: string) {

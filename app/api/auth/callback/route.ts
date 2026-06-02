@@ -69,7 +69,8 @@ export async function GET(request: Request) {
 
             if (accessToken) {
               const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
-              finalNext = `${readoraUrl}/auth/token-exchange?access_token=${accessToken}&role=${actualRole}&org_id=${orgId}`;
+              const nocache = Date.now();
+              finalNext = `${readoraUrl}/auth/token-exchange?access_token=${accessToken}&role=${actualRole}&org_id=${orgId}&_nocache=${nocache}`;
             }
           }
         } catch (e) {

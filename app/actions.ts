@@ -466,8 +466,9 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   }
 
   const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
+  const nocache = Date.now();
   
-  return { successUrl: `${readoraUrl}/auth/token-exchange?access_token=${accessToken}&role=${actualRole}&org_id=${classId}` };
+  return { successUrl: `${readoraUrl}/auth/token-exchange?access_token=${accessToken}&role=${actualRole}&org_id=${classId}&_nocache=${nocache}` };
 }
 
 export async function updateSchoolPlan(schoolId: string, newPlan: string) {

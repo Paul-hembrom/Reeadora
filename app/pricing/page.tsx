@@ -321,6 +321,52 @@ export default function PricingPage() {
           </table>
         </div>
       </div>
+
+      {/* FAQ Section */}
+      <div className="mt-24 max-w-3xl mx-auto pb-12">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Frequently Asked Questions</h2>
+          <p className="text-slate-500 dark:text-slate-400 mt-4 text-lg">Everything you need to know about our subscriptions and billing.</p>
+        </div>
+        <div className="space-y-4">
+          {[
+            {
+              question: "Can I try before I buy?",
+              answer: "Yes, we offer a 14-day free trial on all plans. You can cancel at any time during the trial period without being charged."
+            },
+            {
+              question: "What payment methods do you accept?",
+              answer: "We accept all major credit cards and debit cards via Stripe. For Enterprise customers, we also support manual invoicing and ACH transfers."
+            },
+            {
+              question: "Can I change my plan later?",
+              answer: "Absolutely. You can upgrade or downgrade your plan at any time. Prorated charges or credits will automatically be applied to your account."
+            },
+            {
+              question: "Is there a discount for annual billing?",
+              answer: "Yes! You save 20% by choosing annual billing instead of monthly billing. This discount is applied automatically when you select the annual billing option."
+            },
+            {
+              question: "What happens if I exceed my plan limits?",
+              answer: "If you exceed your AI videos or feature limits, we will safely pause those specific features for the remainder of the billing cycle. You can upgrade your plan immediately to restore access."
+            }
+          ].map((faq, index) => (
+            <details key={index} className="group border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-xl [&_summary::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer items-center justify-between gap-1.5 rounded-xl p-5 text-slate-900 dark:text-white font-medium outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
+                <span className="text-base">{faq.question}</span>
+                <span className="shrink-0 transition duration-300 group-open:-rotate-180">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-500 dark:text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </span>
+              </summary>
+              <div className="p-5 pt-0 text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
+                {faq.answer}
+              </div>
+            </details>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

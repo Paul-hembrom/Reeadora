@@ -16,8 +16,8 @@ export default function PricingPage() {
       name: "Essentials",
       description: "Most affordable plan for growing schools.",
       price: {
-        USD: { annual: 990, monthly: 99 },
-        NPR: { annual: 132660, monthly: 13266 },
+        USD: { annual: 1120, monthly: 112 },
+        NPR: { annual: 149990, monthly: 14999 },
       },
       features: [
         "Unlimited students",

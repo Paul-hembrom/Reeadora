@@ -83,7 +83,7 @@ export async function createSchool(formData: FormData) {
       .from("school_subscriptions")
       .insert({
         school_id: school.id,
-        plan: 'growth',
+        plan: 'essentials',
         status: 'trial',
         trial_end_date: trialEnd.toISOString(),
         current_period_end: trialEnd.toISOString()
@@ -141,7 +141,7 @@ export async function toggleSchoolLock(schoolId: string, currentStatus: string) 
     updatedSub = ud;
   } else {
     updateData.school_id = schoolId;
-    updateData.plan = 'starter';
+    updateData.plan = 'essentials';
     const { data: id, error: ie } = await adminClient
       .from("school_subscriptions")
       .insert(updateData)
@@ -548,7 +548,7 @@ export async function updateSchoolStatus(schoolId: string, newStatus: string) {
   } else {
     const { data: id, error: ie } = await adminClient
       .from("school_subscriptions")
-      .insert({ school_id: schoolId, plan: 'starter', status: newStatus })
+      .insert({ school_id: schoolId, plan: 'essentials', status: newStatus })
       .select()
       .single();
     subError = ie;
@@ -605,7 +605,7 @@ export async function extendTrial(schoolId: string) {
       .from("school_subscriptions")
       .insert({ 
         school_id: schoolId, 
-        plan: 'starter',
+        plan: 'essentials',
         status: 'trial',
         trial_end_date: newDate.toISOString(),
         current_period_end: newDate.toISOString()

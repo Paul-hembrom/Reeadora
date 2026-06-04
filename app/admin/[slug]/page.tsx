@@ -129,8 +129,8 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
                 <ShieldCheck className="w-5 h-5" />
              </div>
              <div>
-               <p className="font-semibold text-sm">You are on a {planName} trial</p>
-               <p className="text-sm opacity-90">{trialDaysLeft > 0 ? `${trialDaysLeft} days remaining.` : 'Trial expired.'} Upgrade to unlock video generation and image search.</p>
+               <p className="font-semibold text-sm">You are on an {planName} trial</p>
+               <p className="text-sm opacity-90">{trialDaysLeft > 0 ? `${trialDaysLeft} days remaining.` : 'Trial expired.'} Upgrade to Starter for advanced features like AI videos.</p>
              </div>
            </div>
            <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Upgrade Now</a>} />
@@ -153,6 +153,9 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
                )}
              </div>
            </div>
+           {subscription?.plan === 'essentials' && (
+             <Button size="sm" className="bg-green-600 text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Upgrade Now</a>} />
+           )}
         </div>
       )}
 

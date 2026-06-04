@@ -54,7 +54,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">Access Denied</h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">You do not have permission to view the admin dashboard for this school.</p>
             </div>
-            <Button render={<Link href="/join">Return to Workspaces</Link>} variant="outline" className="w-full mt-2" />
+            <Button nativeButton={false} render={<Link href="/join">Return to Workspaces</Link>} variant="outline" className="w-full mt-2" />
           </CardContent>
         </Card>
       </div>
@@ -117,8 +117,8 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
           <p className="text-sm font-mono text-slate-500 dark:text-slate-400">/{school.slug}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-           <Button variant="outline" render={<Link href={`/admin/${slug}/settings`}><Settings className="w-4 h-4 mr-2" />Settings</Link>} className="border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800" />
-           <Button variant="secondary" render={<a href={`/school/${slug}`} target="_blank" rel="noreferrer" className={isLockedOrPastDue ? 'pointer-events-none opacity-50' : ''}>Preview Gateway</a>} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50" />
+           <Button nativeButton={false} variant="outline" render={<Link href={`/admin/${slug}/settings`}><Settings className="w-4 h-4 mr-2" />Settings</Link>} className="border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800" />
+           <Button nativeButton={false} variant="secondary" render={<a href={`/school/${slug}`} target="_blank" rel="noreferrer" className={isLockedOrPastDue ? 'pointer-events-none opacity-50' : ''}>Preview Gateway</a>} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50" />
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
                <p className="text-sm opacity-90">{trialDaysLeft > 0 ? `${trialDaysLeft} days remaining.` : 'Trial expired.'} Upgrade to Starter for advanced features like AI videos.</p>
              </div>
            </div>
-           <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Upgrade Now</a>} />
+           <Button nativeButton={false} size="sm" className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Upgrade Now</a>} />
         </div>
       )}
 
@@ -154,7 +154,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
              </div>
            </div>
            {subscription?.plan === 'essentials' && (
-             <Button size="sm" className="bg-green-600 text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Upgrade Now</a>} />
+             <Button nativeButton={false} size="sm" className="bg-green-600 text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Upgrade Now</a>} />
            )}
         </div>
       )}
@@ -170,7 +170,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
               <p className="text-sm opacity-90">Your subscription is past due. Renew now to restore full access.</p>
             </div>
           </div>
-          <Button size="sm" className="bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Renew Now</a>} />
+          <Button nativeButton={false} size="sm" className="bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Renew Now</a>} />
         </div>
       )}
 
@@ -185,7 +185,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
               <p className="text-sm opacity-90">Your account has been suspended. Please contact support.</p>
             </div>
           </div>
-          <Button size="sm" className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Contact Support</a>} />
+          <Button nativeButton={false} size="sm" className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 border-0 w-full sm:w-auto shadow-md transition-transform active:scale-[0.98]" render={<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Contact Support</a>} />
         </div>
       )}
 

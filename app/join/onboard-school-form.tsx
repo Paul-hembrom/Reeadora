@@ -68,7 +68,7 @@ export function OnboardSchoolForm({ queryError }: { queryError?: string }) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4 sm:justify-start w-full">
-            <Button render={<a href={`/admin/${successSlug}`}>Go to Admin Dashboard</a>} className="w-full h-11 shadow-md" />
+            <Button nativeButton={false} render={<a href={`/admin/${successSlug}`}>Go to Admin Dashboard</a>} className="w-full h-11 shadow-md" />
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -17,7 +17,7 @@ export default function NotAuthorizedPage() {
               You do not have authorization to access this dashboard. Students are not permitted to access administrative pages.
             </p>
           </div>
-          <Button render={<Link href="/">Return to Home</Link>} variant="outline" className="w-full mt-2" />
+          <Button nativeButton={false} render={<Link href="/">Return to Home</Link>} variant="outline" className="w-full mt-2" />
         </CardContent>
       </Card>
     </div>

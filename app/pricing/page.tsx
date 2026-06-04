@@ -235,6 +235,7 @@ export default function PricingPage() {
                       <Link href={plan.ctaLink}>{plan.ctaText}</Link>
                     )
                   }
+                  nativeButton={false}
                   variant={plan.highlighted ? "default" : "outline"}
                   className={`w-full h-12 text-base font-semibold ${
                     plan.highlighted ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md dark:bg-indigo-600 dark:hover:bg-indigo-700" : ""

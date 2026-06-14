@@ -7,7 +7,7 @@ export default function SetupInstructions() {
       <h1>Readora Integration Instructions</h1>
       
       <h3>1. Environment Configuration</h3>
-      <p>Ensure the following are set in the Gateway app's environment:</p>
+      <p>Ensure the following are set in the Gateway app&apos;s environment:</p>
       <ul>
         <li><code>NEXT_PUBLIC_SUPABASE_URL</code></li>
         <li><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></li>

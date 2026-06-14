@@ -43,7 +43,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ slug: s
             <CopyX className="w-6 h-6 text-red-600 dark:text-red-400" />
           </div>
           <h2 className="text-2xl font-bold mb-2">Service Suspended</h2>
-          <p className="text-red-700/80 dark:text-red-400/80">This school's workspace is currently suspended. Please contact the administration.</p>
+          <p className="text-red-700/80 dark:text-red-400/80">This school&apos;s workspace is currently suspended. Please contact the administration.</p>
         </div>
       ) : (
         <div className="space-y-10">

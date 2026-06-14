@@ -53,7 +53,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
       <Card>
         <CardHeader>
           <CardTitle>General Information</CardTitle>
-          <CardDescription>Update your school's public profile information.</CardDescription>
+          <CardDescription>Update your school&apos;s public profile information.</CardDescription>
         </CardHeader>
         <CardContent>
           <form action={async (formData) => {

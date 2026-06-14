@@ -70,9 +70,33 @@ export async function GET(request: Request) {
             const accessToken = session?.access_token;
 
             if (accessToken) {
+              const { SignJWT } = await import('jose');
+              const jwtSecret = process.env.JWT_SECRET;
+              if (!jwtSecret) throw new Error("JWT_SECRET is not configured on server");
+
+              const localToken = await new SignJWT({ userId: user.id })
+                .setProtectedHeader({ alg: 'HS256' })
+                .setExpirationTime('7d')
+                .sign(new TextEncoder().encode(jwtSecret));
+
+              const { cookies } = await import('next/headers');
+              const cookieStore = await cookies();
+              const cookieOptions = {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'lax' as const,
+                path: '/',
+                maxAge: 7 * 24 * 60 * 60,
+                domain: '.alphanexoraai.com'
+              };
+
+              cookieStore.set('token', localToken, cookieOptions);
+              cookieStore.set('sb-role', actualRole, cookieOptions);
+              cookieStore.set('sb-org-id', orgId, cookieOptions);
+
               const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
               const nocache = Date.now();
-              finalNext = `${readoraUrl}/auth/token-exchange?access_token=${accessToken}&role=${actualRole}&org_id=${orgId}&_nocache=${nocache}`;
+              finalNext = `${readoraUrl}/?_nocache=${nocache}`;
             }
           }
         } catch (e) {

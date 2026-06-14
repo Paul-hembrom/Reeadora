@@ -65,7 +65,9 @@ export async function GET(request: Request) {
               .maybeSingle();
 
             const actualRole = memberRecord?.role || role;
-            const accessToken = authData.session?.access_token;
+
+            const { data: { session } } = await supabase.auth.getSession();
+            const accessToken = session?.access_token;
 
             if (accessToken) {
               const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";

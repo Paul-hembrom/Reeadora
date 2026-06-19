@@ -485,7 +485,7 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   };
 
   cookieStore.set('token', localToken, cookieOptions);
-  cookieStore.set('sb-role', actualRole, cookieOptions);
+  cookieStore.set('sb-role', role, cookieOptions);
   cookieStore.set('sb-org-id', classId, cookieOptions);
 
   const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";

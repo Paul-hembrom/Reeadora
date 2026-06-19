@@ -91,7 +91,7 @@ export async function GET(request: Request) {
               };
 
               cookieStore.set('token', localToken, cookieOptions);
-              cookieStore.set('sb-role', actualRole, cookieOptions);
+              cookieStore.set('sb-role', role, cookieOptions);
               cookieStore.set('sb-org-id', orgId, cookieOptions);
 
               const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";

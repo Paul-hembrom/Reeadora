@@ -17,12 +17,12 @@ export default function PricingPage() {
       name: "Essentials",
       description: "Most affordable plan for growing schools.",
       price: {
-        USD: { annual: 1120, monthly: 112 },
-        NPR: { annual: 149990, monthly: 14999 },
+        USD: { annual: 2999, monthly: 299 },
+        NPR: { annual: 29999 * 12, monthly: 29999 },
       },
       features: [
         "Unlimited students",
-        "Unlimited book uploads",
+        "Unlimited books",
         "Full AI chat",
         "YouTube video embed",
         "Image discovery"
@@ -36,11 +36,12 @@ export default function PricingPage() {
       name: "Starter",
       description: "Perfect for small schools just getting started.",
       price: {
-        USD: { annual: 1750, monthly: null },
-        NPR: { annual: 234500, monthly: null },
+        USD: { annual: 4799, monthly: 479 },
+        NPR: { annual: 47999 * 12, monthly: 47999 },
       },
       features: [
         "Unlimited students",
+        "Unlimited books",
         "10 AI videos/month",
         "Basic analytics",
         "Chat support",
@@ -54,11 +55,12 @@ export default function PricingPage() {
       name: "Growth",
       description: "Ideal for growing schools needing advanced features.",
       price: {
-        USD: { annual: 4200, monthly: 420 },
-        NPR: { annual: 562800, monthly: 56280 },
+        USD: { annual: 7399, monthly: 739 },
+        NPR: { annual: 73999 * 12, monthly: 73999 },
       },
       features: [
         "Unlimited students",
+        "Unlimited books",
         "25 AI videos/month",
         "Image discovery",
         "Interactive lessons",
@@ -74,11 +76,12 @@ export default function PricingPage() {
       name: "Enterprise",
       description: "For large institutions requiring custom solutions.",
       price: {
-        USD: { annual: 8500, monthly: null },
-        NPR: { annual: 1139000, monthly: null },
+        USD: { annual: 14099, monthly: 1409 },
+        NPR: { annual: 140999 * 12, monthly: 140999 },
       },
       features: [
         "Unlimited students",
+        "Unlimited books",
         "50 AI videos/month",
         "Custom integrations",
         "Dedicated support",
@@ -261,7 +264,7 @@ export default function PricingPage() {
           {[
             {
               question: "Can I try before I buy?",
-              answer: "Yes, we offer a 14-day free trial on all plans. You can cancel at any time during the trial period without being charged."
+              answer: "Yes, all new schools automatically start with a 14-day free trial on the Essentials plan. You can upgrade to a higher tier at any time."
             },
             {
               question: "What payment methods do you accept?",

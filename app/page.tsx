@@ -164,7 +164,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                   Get Started Free
                 </Button>
               </Link>
-              <p className="text-cyan-100 font-medium tracking-wide">No credit card required. 14‑day free trial.</p>
+              <p className="text-cyan-100 font-medium tracking-wide">No credit card required. 14‑day Essentials trial.</p>
             </div>
           </div>
         </div>

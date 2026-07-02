@@ -24,6 +24,13 @@ export function PricingTable() {
               <td className="p-4 text-center text-slate-500 dark:text-slate-400">Unlimited</td>
             </tr>
             <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+              <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">Books Included</td>
+              <td className="p-4 text-center text-slate-500 dark:text-slate-400">Unlimited</td>
+              <td className="p-4 text-center text-slate-500 dark:text-slate-400">Unlimited</td>
+              <td className="p-4 text-center font-semibold text-slate-900 dark:text-white">Unlimited</td>
+              <td className="p-4 text-center text-slate-500 dark:text-slate-400">Unlimited</td>
+            </tr>
+            <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
               <td className="p-4 sm:p-6 font-medium text-slate-700 dark:text-slate-300">AI Videos per month</td>
               <td className="p-4 text-center"><X className="w-4 h-4 mx-auto text-slate-300 dark:text-slate-600" /></td>
               <td className="p-4 text-center text-slate-500 dark:text-slate-400">10</td>

@@ -160,20 +160,6 @@ export async function GET(request: Request) {
         }
       }
 
-      // Check for single school admin redirect
-      if (finalNext === '/join' || finalNext === '/') {
-        const { data: existingAdmins } = await adminSupabase
-          .from('school_admins')
-          .select('school_id')
-          .eq('user_id', user.id);
-          
-        if (existingAdmins && existingAdmins.length === 1) {
-           finalNext = `/api/auth/admin-workspace?schoolId=${existingAdmins[0].school_id}`;
-        } else if (existingAdmins && existingAdmins.length > 1) {
-           finalNext = `/join`;
-        }
-      }
-
       const nextUrl = new URL(finalNext, origin)
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'

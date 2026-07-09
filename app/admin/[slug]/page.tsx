@@ -10,7 +10,7 @@ import { RemoveTeacherButton } from "./remove-teacher-button";
 import { PendingInvitationActions } from "./pending-invitation-actions";
 import Link from "next/link";
 import { checkAndGetSubscription } from "@/app/actions";
-import { BookOpen, Users, Key, AlertTriangle, ShieldCheck, Mail, LogOut, Settings, Video, ImageIcon, Activity } from "lucide-react";
+import { BookOpen, Users, Key, AlertTriangle, ShieldCheck, Mail, LogOut, Settings } from "lucide-react";
 
 export default async function AdminDashboard({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -100,27 +100,8 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
     pendingInvitations = invitations || [];
   }
 
-  // Load school usage
-  const { data: usage } = await adminClient
-    .from("school_usage")
-    .select("*")
-    .eq("school_id", school.id)
-    .maybeSingle();
-
-  // Load student count
-  let studentCount = 0;
-  if (orgIds.length > 0) {
-    const { count } = await adminClient
-      .from("organization_members")
-      .select("id", { count: "exact", head: true })
-      .in("organization_id", orgIds)
-      .eq("role", "student");
-    studentCount = count || 0;
-  }
-
   // Calculate unique teachers manually
   const uniqueTeacherCount = new Set(teachers.map(t => t.teacher_user_id)).size + new Set(pendingInvitations.map(inv => inv.email)).size;
-  const activeUserCount = uniqueTeacherCount + studentCount;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -136,7 +117,6 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
           <p className="text-sm font-mono text-slate-500 dark:text-slate-400">/{school.slug}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-           <Button nativeButton={false} variant="outline" render={<Link href={`/admin/${slug}/school-content`}><BookOpen className="w-4 h-4 mr-2" />Content</Link>} className="border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800" />
            <Button nativeButton={false} variant="outline" render={<Link href={`/admin/${slug}/settings`}><Settings className="w-4 h-4 mr-2" />Settings</Link>} className="border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800" />
            <Button nativeButton={false} variant="secondary" render={<a href={`/school/${slug}`} target="_blank" rel="noreferrer" className={isLockedOrPastDue ? 'pointer-events-none opacity-50' : ''}>Preview Gateway</a>} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50" />
         </div>
@@ -245,42 +225,6 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
              </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Usage Metrics */}
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4">Current Month Usage</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md shadow-sm">
-            <CardContent className="p-5 flex flex-col gap-1">
-               <div className="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-500/20 text-pink-600 dark:text-pink-400 flex items-center justify-center mb-2">
-                  <Video className="w-4 h-4" />
-               </div>
-               <p className="text-2xl font-bold text-slate-800 dark:text-white">{usage?.videos_generated_this_month || 0}</p>
-               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">AI Video Usage</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md shadow-sm">
-            <CardContent className="p-5 flex flex-col gap-1">
-               <div className="w-8 h-8 rounded-lg bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-2">
-                  <ImageIcon className="w-4 h-4" />
-               </div>
-               <p className="text-2xl font-bold text-slate-800 dark:text-white">{usage?.image_searches_this_month || 0}</p>
-               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Image Searches</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md shadow-sm">
-            <CardContent className="p-5 flex flex-col gap-1">
-               <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 flex items-center justify-center mb-2">
-                  <Activity className="w-4 h-4" />
-               </div>
-               <p className="text-2xl font-bold text-slate-800 dark:text-white">{activeUserCount}</p>
-               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Users</p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_350px] gap-8 items-start">

@@ -41,12 +41,12 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
   const adminClient = await createAdminClient();
   const { data: existingAdmins } = await adminClient
     .from("school_admins")
-    .select("schools(name, slug)")
+    .select("schools(id, name, slug)")
     .eq("user_id", user.id);
 
   const existingSchools = existingAdmins?.map(admin => {
     const school = Array.isArray(admin.schools) ? admin.schools[0] : admin.schools;
-    return school as { name: string, slug: string };
+    return school as { id: string, name: string, slug: string };
   }).filter(Boolean) || [];
 
   return (
@@ -71,7 +71,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
             {existingSchools.map((school, idx) => (
               <Link
                 key={idx}
-                href={`/admin/${school.slug}`}
+                href={`/api/auth/admin-workspace?schoolId=${school.id}`}
                 className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-[#0f0f0f] hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-200 hover:shadow-md"
               >
                 <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-3">

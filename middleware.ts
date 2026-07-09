@@ -51,9 +51,20 @@ export async function middleware(request: NextRequest) {
       return new NextResponse('Too Many Requests', { status: 429 });
     }
 
+    const adminSupabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          getAll() { return []; },
+          setAll() {},
+        },
+      }
+    );
+
     // Must have role = 'admin' in organization_members OR be a school_admin
     // (We check both to not break D2 while complying with the prompt)
-    const { data: orgAdmin } = await supabase
+    const { data: orgAdmin } = await adminSupabase
       .from('organization_members')
       .select('id')
       .eq('user_id', user.id)
@@ -61,7 +72,7 @@ export async function middleware(request: NextRequest) {
       .limit(1)
       .maybeSingle();
 
-    const { data: schoolAdmin } = await supabase
+    const { data: schoolAdmin } = await adminSupabase
       .from('school_admins')
       .select('id')
       .eq('user_id', user.id)

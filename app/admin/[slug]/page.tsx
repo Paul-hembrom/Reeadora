@@ -136,6 +136,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ slu
           <p className="text-sm font-mono text-slate-500 dark:text-slate-400">/{school.slug}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+           <Button nativeButton={false} variant="outline" render={<Link href={`/admin/${slug}/school-content`}><BookOpen className="w-4 h-4 mr-2" />Content</Link>} className="border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800" />
            <Button nativeButton={false} variant="outline" render={<Link href={`/admin/${slug}/settings`}><Settings className="w-4 h-4 mr-2" />Settings</Link>} className="border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800" />
            <Button nativeButton={false} variant="secondary" render={<a href={`/school/${slug}`} target="_blank" rel="noreferrer" className={isLockedOrPastDue ? 'pointer-events-none opacity-50' : ''}>Preview Gateway</a>} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50" />
         </div>

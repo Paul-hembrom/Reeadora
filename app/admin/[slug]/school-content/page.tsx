@@ -29,6 +29,12 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
     notFound();
   }
 
+  let hasAccess = false;
+  let userRole = "student";
+  let userOrgId = "";
+  let preselectGrade = "";
+  let preselectSubject = "";
+
   // Check admin
   const { data: adminCheck } = await adminClient
     .from("school_admins")
@@ -37,7 +43,53 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!adminCheck) {
+  if (adminCheck) {
+    hasAccess = true;
+    userRole = "admin";
+  } else {
+    // Check if they are a member of any organization in this school
+    const { data: orgs } = await adminClient
+      .from("organizations")
+      .select("id, name")
+      .eq("school_id", school.id);
+    
+    if (orgs && orgs.length > 0) {
+      const orgIds = orgs.map(o => o.id);
+      const { data: memberCheck } = await adminClient
+        .from("organization_members")
+        .select("organization_id, role")
+        .eq("user_id", user.id)
+        .in("organization_id", orgIds)
+        .maybeSingle();
+      
+      if (memberCheck) {
+        hasAccess = true;
+        userRole = memberCheck.role || "student";
+        userOrgId = memberCheck.organization_id;
+        
+        const userOrg = orgs.find(o => o.id === userOrgId);
+        if (userRole === "student" && userOrg) {
+          // Attempt to extract grade and subject from organization name
+          // E.g. "Grade 1 Math", "5th Grade Science", etc.
+          const gradeMatch = userOrg.name.match(/(?:Grade\s*\d+|\d+(?:st|nd|rd|th)\s*Grade)/i);
+          if (gradeMatch) {
+             preselectGrade = gradeMatch[0];
+          }
+          
+          const words = userOrg.name.split(/\s+/);
+          const potentialSubjects = ["Math", "Science", "History", "English", "Reading", "Writing", "Art", "Music", "Physical Education", "Social Studies"];
+          for (const sub of potentialSubjects) {
+            if (userOrg.name.toLowerCase().includes(sub.toLowerCase())) {
+              preselectSubject = sub;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (!hasAccess) {
     return (
       <div className="flex items-center justify-center p-8 mt-20 max-w-md mx-auto">
         <Card className="w-full border-red-200/50 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900/50 shadow-sm backdrop-blur-xl">
@@ -47,7 +99,7 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
             </div>
             <div className="space-y-1">
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">Access Denied</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">You do not have permission to view the admin dashboard for this school.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">You do not have permission to view the curriculum for this school.</p>
             </div>
             <Button nativeButton={false} render={<Link href="/join">Return to Workspaces</Link>} variant="outline" className="w-full mt-2" />
           </CardContent>
@@ -63,6 +115,14 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
     .order("grade");
 
   const grades = Array.from(new Set((gradesData || []).map(d => d.grade as string)));
+
+  // Best effort matching of extracted grade to actual grades
+  if (preselectGrade) {
+     const match = grades.find(g => g.toLowerCase() === preselectGrade.toLowerCase() || g.toLowerCase().includes(preselectGrade.toLowerCase()) || preselectGrade.toLowerCase().includes(g.toLowerCase()));
+     if (match) {
+        preselectGrade = match;
+     }
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -82,7 +142,13 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      <SchoolContentClient initialGrades={grades} />
+      <SchoolContentClient 
+        initialGrades={grades} 
+        userRole={userRole} 
+        userOrgId={userOrgId} 
+        preselectGrade={preselectGrade} 
+        preselectSubject={preselectSubject} 
+      />
     </div>
   );
 }

@@ -3,33 +3,56 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen } from "lucide-react";
-import { getSubjectsByGrade } from "./actions";
+import { BookOpen, Loader2 } from "lucide-react";
+import { getSubjectsByGrade, prepareContentRedirect } from "./actions";
 
 interface SubjectData {
   subject: string;
   title: string;
 }
 
-export function SchoolContentClient({ initialGrades }: { initialGrades: string[] }) {
-  const [selectedGrade, setSelectedGrade] = useState<string>("");
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
+interface SchoolContentClientProps {
+  initialGrades: string[];
+  userRole?: string;
+  userOrgId?: string;
+  preselectGrade?: string;
+  preselectSubject?: string;
+}
+
+export function SchoolContentClient({ 
+  initialGrades, 
+  userRole, 
+  userOrgId, 
+  preselectGrade, 
+  preselectSubject 
+}: SchoolContentClientProps) {
+  const [selectedGrade, setSelectedGrade] = useState<string>(preselectGrade || "");
+  const [selectedSubject, setSelectedSubject] = useState<string>(preselectSubject || "");
   const [subjects, setSubjects] = useState<SubjectData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selectedGrade) {
-      setSubjects([]);
-      setSelectedSubject("");
+      setTimeout(() => {
+        setSubjects([]);
+        if (!preselectSubject) setSelectedSubject("");
+      }, 0);
       return;
     }
 
     let isMounted = true;
-    setIsLoading(true);
+    setTimeout(() => {
+       setIsLoading(true);
+    }, 0);
     getSubjectsByGrade(selectedGrade).then((data) => {
       if (isMounted) {
         setSubjects(data || []);
-        setSelectedSubject("");
+        if (!preselectSubject || !data?.some(s => s.subject === preselectSubject)) {
+           setSelectedSubject("");
+        } else {
+           setSelectedSubject(preselectSubject);
+        }
         setIsLoading(false);
       }
     });
@@ -37,7 +60,7 @@ export function SchoolContentClient({ initialGrades }: { initialGrades: string[]
     return () => {
       isMounted = false;
     };
-  }, [selectedGrade]);
+  }, [selectedGrade, preselectSubject]);
 
   const uniqueSubjects = Array.from(new Set(subjects.map((s) => s.subject)));
 
@@ -45,9 +68,21 @@ export function SchoolContentClient({ initialGrades }: { initialGrades: string[]
     ? subjects.filter((s) => s.subject === selectedSubject)
     : subjects;
 
-  const handleOpen = (grade: string, subject: string) => {
-    const url = `https://redora.alphanexoraai.com/library?source=curriculum&grade=${encodeURIComponent(grade)}&subject=${encodeURIComponent(subject)}`;
-    window.open(url, "_blank");
+  const handleOpen = async (grade: string, subject: string) => {
+    setRedirecting(subject);
+    try {
+      if (userRole && userOrgId) {
+        await prepareContentRedirect(userRole, userOrgId);
+      }
+      
+      let url = `https://redora.alphanexoraai.com/library?source=curriculum&grade=${encodeURIComponent(grade)}&subject=${encodeURIComponent(subject)}`;
+      if (userRole && userOrgId) {
+        url += `&role=${encodeURIComponent(userRole)}&orgId=${encodeURIComponent(userOrgId)}`;
+      }
+      window.open(url, "_blank");
+    } finally {
+      setRedirecting(null);
+    }
   };
 
   return (
@@ -124,9 +159,14 @@ export function SchoolContentClient({ initialGrades }: { initialGrades: string[]
               <CardFooter className="pt-4 pb-4">
                 <Button
                   onClick={() => handleOpen(selectedGrade, item.subject)}
+                  disabled={redirecting === item.subject}
                   className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                 >
-                  Open Content
+                  {redirecting === item.subject ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Preparing...</>
+                  ) : (
+                    "Open Content"
+                  )}
                 </Button>
               </CardFooter>
             </Card>

@@ -1,0 +1,88 @@
+import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { notFound, redirect } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { AlertTriangle, BookOpen } from "lucide-react";
+import { SchoolContentClient } from "./school-content-client";
+
+export default async function SchoolContentPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/join");
+  }
+
+  const adminClient = await createAdminClient();
+
+  // Load school
+  const { data: school } = await adminClient
+    .from("schools")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!school) {
+    notFound();
+  }
+
+  // Check admin
+  const { data: adminCheck } = await adminClient
+    .from("school_admins")
+    .select("id")
+    .eq("school_id", school.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!adminCheck) {
+    return (
+      <div className="flex items-center justify-center p-8 mt-20 max-w-md mx-auto">
+        <Card className="w-full border-red-200/50 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900/50 shadow-sm backdrop-blur-xl">
+          <CardContent className="pt-6 flex flex-col items-center text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400">
+               <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">Access Denied</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">You do not have permission to view the admin dashboard for this school.</p>
+            </div>
+            <Button nativeButton={false} render={<Link href="/join">Return to Workspaces</Link>} variant="outline" className="w-full mt-2" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Fetch initial grades
+  const { data: gradesData } = await adminClient
+    .from("curriculum_library")
+    .select("grade")
+    .order("grade");
+
+  const grades = Array.from(new Set((gradesData || []).map(d => d.grade as string)));
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6">
+        <div className="space-y-1 block">
+          <Badge variant="outline" className="text-xs font-mono font-medium tracking-wide rounded-md mb-2 bg-slate-200/50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-0 shadow-none">
+            {school.name}
+          </Badge>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+             <BookOpen className="w-7 h-7 text-indigo-500" />
+             School Content
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Manage curriculum and learning materials</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+           <Button nativeButton={false} variant="outline" render={<Link href={`/admin/${slug}`}>Back to Dashboard</Link>} className="border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800" />
+        </div>
+      </div>
+
+      <SchoolContentClient initialGrades={grades} />
+    </div>
+  );
+}

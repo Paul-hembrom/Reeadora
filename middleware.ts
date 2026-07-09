@@ -4,9 +4,9 @@ import { createServerClient } from '@supabase/ssr';
 import { RateLimiter } from '@/lib/rate-limit';
 
 // Rate limiters (in-memory per Edge instance)
-const joinLimiter = new RateLimiter(60 * 60 * 1000, 3); // 3 requests per hour
-const authLimiter = new RateLimiter(60 * 1000, 10);     // 10 requests per minute
-const adminLimiter = new RateLimiter(60 * 1000, 30);    // 30 requests per minute
+const joinLimiter = new RateLimiter(60 * 60 * 1000, 30); // 30 requests per hour
+const authLimiter = new RateLimiter(60 * 1000, 45);     // 45 requests per minute
+const adminLimiter = new RateLimiter(60 * 1000, 45);    // 45 requests per minute
 
 export async function middleware(request: NextRequest) {
   const response = await updateSession(request);

@@ -7,8 +7,10 @@ export async function getSubjectsByGrade(grade: string) {
   const adminClient = await createAdminClient();
   const { data, error } = await adminClient
     .from("curriculum_library")
-    .select("subject, title")
-    .eq("grade", grade);
+    .select("id, subject, title, subtopic")
+    .eq("grade", grade)
+    .order("title")
+    .order("subtopic");
 
   if (error) {
     console.error("Error fetching subjects:", error);

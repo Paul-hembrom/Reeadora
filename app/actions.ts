@@ -831,3 +831,26 @@ export async function removeTeacher(schoolId: string, slug: string, assignmentId
 
   revalidatePath(`/admin/${slug}`);
 }
+
+export async function verifyClassPassword(classId: string, role: string, passwordAttempt: string) {
+  const adminClient = await createAdminClient();
+  const { data: org } = await adminClient
+    .from("organizations")
+    .select("teacher_password, student_password")
+    .eq("id", classId)
+    .maybeSingle();
+
+  if (!org) {
+    return { error: "Class not found." };
+  }
+
+  const isValid = 
+    (role === 'teacher' && org.teacher_password === passwordAttempt) ||
+    (role === 'student' && org.student_password === passwordAttempt);
+
+  if (!isValid) {
+    return { error: "Invalid password." };
+  }
+
+  return { success: true };
+}

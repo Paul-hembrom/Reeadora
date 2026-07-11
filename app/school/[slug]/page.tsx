@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { ClassGate } from "./class-gate";
 import { ParallaxBanner } from "./parallax-banner";
 import { checkAndGetSubscription } from "@/app/actions";
@@ -51,6 +52,14 @@ export default async function SchoolPage({ params }: { params: Promise<{ slug: s
           <div className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 backdrop-blur-sm">
              <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white mb-4">Workspace Features</h2>
              <div className="flex flex-wrap gap-4">
+                <Link href={`/admin/${slug}/school-content`} className="flex flex-col p-4 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer w-[240px]">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                  </div>
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100">School Content</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Browse and access curriculum learning materials.</p>
+                </Link>
+                
                 <div 
                   className={`flex flex-col p-4 rounded-2xl border ${
                     hasInteractiveLessons 

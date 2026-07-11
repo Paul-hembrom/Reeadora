@@ -45,7 +45,7 @@ function ChapterCard({ chapter, selectedGrade, userRole, userOrgId }: ChapterCar
       
       let url = `https://redora.alphanexoraai.com/library?source=curriculum&grade=${encodeURIComponent(selectedGrade)}&subject=${encodeURIComponent(chapter.subject)}`;
       if (userRole && userOrgId) {
-        url += `&role=${encodeURIComponent(userRole)}&orgId=${encodeURIComponent(userOrgId)}`;
+        url += `&role=${encodeURIComponent(userRole)}&org_id=${encodeURIComponent(userOrgId)}`;
       }
       if (subtopicId) {
          url += `&subtopic=${encodeURIComponent(subtopicId)}`;

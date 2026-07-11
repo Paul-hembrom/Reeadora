@@ -55,17 +55,19 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
     
     if (orgs && orgs.length > 0) {
       const orgIds = orgs.map(o => o.id);
-      const { data: memberCheck } = await adminClient
+      const { data: memberChecks } = await adminClient
         .from("organization_members")
         .select("organization_id, role")
         .eq("user_id", user.id)
-        .in("organization_id", orgIds)
-        .maybeSingle();
+        .in("organization_id", orgIds);
       
-      if (memberCheck) {
+      if (memberChecks && memberChecks.length > 0) {
         hasAccess = true;
-        userRole = memberCheck.role || "student";
-        userOrgId = memberCheck.organization_id;
+        const teacherMember = memberChecks.find(m => m.role === 'teacher');
+        const activeMember = teacherMember || memberChecks[0];
+        
+        userRole = activeMember.role || "student";
+        userOrgId = activeMember.organization_id;
         
         const userOrg = orgs.find(o => o.id === userOrgId);
         if (userRole === "student" && userOrg) {

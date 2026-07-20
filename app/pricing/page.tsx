@@ -18,7 +18,7 @@ export default function PricingPage() {
       description: "Most affordable plan for growing schools.",
       price: {
         USD: { annual: 2999, monthly: 299 },
-        NPR: { annual: 29999 * 12, monthly: 29999 },
+        NPR: { annual: 34999 * 12, monthly: 34999 },
       },
       features: [
         "Unlimited students",
@@ -37,7 +37,7 @@ export default function PricingPage() {
       description: "Perfect for small schools just getting started.",
       price: {
         USD: { annual: 4799, monthly: 479 },
-        NPR: { annual: 47999 * 12, monthly: 47999 },
+        NPR: { annual: 54999 * 12, monthly: 54999 },
       },
       features: [
         "Unlimited students",
@@ -56,7 +56,7 @@ export default function PricingPage() {
       description: "Ideal for growing schools needing advanced features.",
       price: {
         USD: { annual: 7399, monthly: 739 },
-        NPR: { annual: 73999 * 12, monthly: 73999 },
+        NPR: { annual: 84999 * 12, monthly: 84999 },
       },
       features: [
         "Unlimited students",
@@ -77,7 +77,7 @@ export default function PricingPage() {
       description: "For large institutions requiring custom solutions.",
       price: {
         USD: { annual: 14099, monthly: 1409 },
-        NPR: { annual: 140999 * 12, monthly: 140999 },
+        NPR: { annual: 159999 * 12, monthly: 159999 },
       },
       features: [
         "Unlimited students",
@@ -218,14 +218,19 @@ export default function PricingPage() {
                 </div>
 
                 <ul className="w-full space-y-4 mb-6">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <div className="mt-0.5 rounded-full bg-green-100 dark:bg-green-500/20 p-1 flex-shrink-0">
-                        <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-                      </div>
-                      <span className="text-sm text-slate-600 dark:text-slate-300">{feature}</span>
-                    </li>
-                  ))}
+                  {plan.features.map((feature, i) => {
+                    const isUnlimitedStudents = feature.toLowerCase().includes("unlimited students");
+                    return (
+                      <li key={i} className="flex items-start gap-3">
+                        <div className={`mt-0.5 rounded-full p-1 flex-shrink-0 ${isUnlimitedStudents ? 'bg-indigo-100 dark:bg-indigo-500/30' : 'bg-green-100 dark:bg-green-500/20'}`}>
+                          <Check className={`h-3 w-3 ${isUnlimitedStudents ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-green-600 dark:text-green-400'}`} />
+                        </div>
+                        <span className={`text-sm ${isUnlimitedStudents ? 'font-bold text-indigo-700 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300'}`}>
+                          {feature}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </CardContent>
               <CardFooter className="pt-4 pb-8 px-6">

@@ -85,10 +85,10 @@ export function SchoolRow({ school }: { school: any }) {
             </Button>
           } />
           <DropdownMenuContent>
-             <DropdownMenuItem onClick={() => handleUpdatePlan("essentials")}>Essentials (NPR 29,999/mo)</DropdownMenuItem>
-             <DropdownMenuItem onClick={() => handleUpdatePlan("starter")}>Starter (NPR 47,999/mo)</DropdownMenuItem>
-             <DropdownMenuItem onClick={() => handleUpdatePlan("growth")}>Growth (NPR 73,999/mo)</DropdownMenuItem>
-             <DropdownMenuItem onClick={() => handleUpdatePlan("enterprise")}>Enterprise (NPR 140,999/mo)</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdatePlan("essentials")}>Essentials (NPR 34,999/mo)</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdatePlan("starter")}>Starter (NPR 54,999/mo)</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdatePlan("growth")}>Growth (NPR 84,999/mo)</DropdownMenuItem>
+             <DropdownMenuItem onClick={() => handleUpdatePlan("enterprise")}>Enterprise (NPR 159,999/mo)</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

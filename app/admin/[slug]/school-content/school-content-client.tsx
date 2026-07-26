@@ -1,14 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Loader2, ChevronDown, LogIn, Eye, EyeOff } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { verifyClassPassword } from "@/app/actions";
-import { getSubjectsByGrade, prepareContentRedirect } from "./actions";
+import { BookOpen, Loader2, ChevronDown } from "lucide-react";
+import { getSubjectsByGrade } from "./actions";
 
 interface SubjectData {
   id: string;
@@ -40,13 +36,6 @@ interface ChapterCardProps {
 function ChapterCard({ chapter, selectedGrade, userRole, userOrgId }: ChapterCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [redirecting, setRedirecting] = useState<string | null>(null);
-  
-  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [pendingSubtopic, setPendingSubtopic] = useState<string | undefined>();
-  const [passwordError, setPasswordError] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
 
   const openDestination = (subtopicId?: string) => {
     let url = `https://redora.alphanexoraai.com/library?source=curriculum&grade=${encodeURIComponent(selectedGrade)}&subject=${encodeURIComponent(chapter.subject)}`;
@@ -60,43 +49,11 @@ function ChapterCard({ chapter, selectedGrade, userRole, userOrgId }: ChapterCar
   };
 
   const handleOpen = (subtopicId?: string) => {
-    if (userRole === "admin") {
-      openDestination(subtopicId);
-      return;
-    }
-    // Teacher or student
-    setPendingSubtopic(subtopicId);
-    setShowPasswordDialog(true);
-    setPassword("");
-    setPasswordError("");
-  };
-
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userRole || !userOrgId) {
-       setPasswordError("Missing class or role information.");
-       return;
-    }
-    setIsVerifying(true);
-    setPasswordError("");
-    try {
-      const res = await verifyClassPassword(userOrgId, userRole, password);
-      if (res.error) {
-        setPasswordError(res.error);
-      } else {
-        setShowPasswordDialog(false);
-        openDestination(pendingSubtopic);
-      }
-    } catch (err: any) {
-      setPasswordError(err.message || "An error occurred");
-    } finally {
-      setIsVerifying(false);
-    }
+    openDestination(subtopicId);
   };
 
   const hasSubtopics = chapter.items.some((i: SubjectData) => i.subtopic);
   return (
-    <>
     <Card className="overflow-hidden transition-all duration-300 border-slate-200/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50">
       <div 
         className={`flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 ${expanded ? 'border-b border-slate-100 dark:border-slate-800' : ''}`}
@@ -153,56 +110,6 @@ function ChapterCard({ chapter, selectedGrade, userRole, userOrgId }: ChapterCar
         </div>
       )}
     </Card>
-
-    <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
-        <DialogContent className="sm:max-w-md border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold tracking-tight flex items-center gap-2">
-               <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                 <LogIn className="w-4 h-4" />
-               </div>
-               Enter Password
-            </DialogTitle>
-            <DialogDescription className="text-base text-slate-500 dark:text-slate-400">
-               Authenticate to access the curriculum.
-            </DialogDescription>
-          </DialogHeader>
-             
-            <form onSubmit={handlePasswordSubmit} className="space-y-5 mt-4">
-                <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">Enter your {userRole} access code</Label>
-                <div className="relative">
-                    <Input 
-                    id="password" 
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Access code..."
-                    required 
-                    className="h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-lg tracking-widest font-mono text-center pr-10"
-                    />
-                    <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                    tabIndex={-1}
-                    >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                </div>
-                </div>
-                {passwordError && (
-                <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg text-center">
-                    {passwordError}
-                </div>
-                )}
-                <Button type="submit" disabled={isVerifying} className="w-full h-11 text-base shadow-md transition-transform active:scale-[0.98]">
-                {isVerifying ? "Authenticating..." : "Enter Curriculum"}
-                </Button>
-            </form>
-        </DialogContent>
-      </Dialog>
-    </>
   );
 }
 

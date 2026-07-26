@@ -55,12 +55,35 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
     
     if (orgs && orgs.length > 0) {
       const orgIds = orgs.map(o => o.id);
+
+      // Check organization_members
       const { data: memberChecks } = await adminClient
         .from("organization_members")
         .select("organization_id, role")
         .eq("user_id", user.id)
         .in("organization_id", orgIds);
-      
+
+      // Check teacher_assignments
+      const { data: teacherAssignments } = await adminClient
+        .from("teacher_assignments")
+        .select("org_id")
+        .eq("teacher_user_id", user.id)
+        .in("org_id", orgIds);
+
+      // Check pending invitations by email
+      let inviteOrgId = "";
+      if (user.email) {
+        const { data: inviteChecks } = await adminClient
+          .from("teacher_invitations")
+          .select("org_id")
+          .eq("email", user.email)
+          .in("org_id", orgIds)
+          .eq("status", "pending");
+        if (inviteChecks && inviteChecks.length > 0) {
+          inviteOrgId = inviteChecks[0].org_id;
+        }
+      }
+
       if (memberChecks && memberChecks.length > 0) {
         hasAccess = true;
         const teacherMember = memberChecks.find(m => m.role === 'teacher');
@@ -68,7 +91,17 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
         
         userRole = activeMember.role || "student";
         userOrgId = activeMember.organization_id;
-        
+      } else if (teacherAssignments && teacherAssignments.length > 0) {
+        hasAccess = true;
+        userRole = "teacher";
+        userOrgId = teacherAssignments[0].org_id;
+      } else if (inviteOrgId) {
+        hasAccess = true;
+        userRole = "teacher";
+        userOrgId = inviteOrgId;
+      }
+
+      if (hasAccess && userOrgId) {
         const userOrg = orgs.find(o => o.id === userOrgId);
         if (userRole === "student" && userOrg) {
           // Attempt to extract grade and subject from organization name
@@ -78,7 +111,6 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
              preselectGrade = gradeMatch[0];
           }
           
-          const words = userOrg.name.split(/\s+/);
           const potentialSubjects = ["Math", "Science", "History", "English", "Reading", "Writing", "Art", "Music", "Physical Education", "Social Studies"];
           for (const sub of potentialSubjects) {
             if (userOrg.name.toLowerCase().includes(sub.toLowerCase())) {
@@ -140,7 +172,7 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
           <p className="text-sm text-slate-500 dark:text-slate-400">Manage curriculum and learning materials</p>
         </div>
         <div className="flex flex-wrap gap-2">
-           <Button nativeButton={false} variant="outline" render={<Link href={`/admin/${slug}`}>Back to Dashboard</Link>} className="border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800" />
+           <Button nativeButton={false} variant="outline" render={<Link href={userRole === 'admin' ? `/admin/${slug}` : `/school/${slug}`}>{userRole === 'admin' ? 'Back to Dashboard' : 'Back to Portal'}</Link>} className="border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800" />
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, ChevronDown } from "lucide-react";
-import { getSubjectsByGrade } from "./actions";
+import { getSubjectsByGrade, getGrades } from "./actions";
 
 interface SubjectData {
   id: string;
@@ -120,10 +120,33 @@ export function SchoolContentClient({
   preselectGrade, 
   preselectSubject 
 }: SchoolContentClientProps) {
+  const [grades, setGrades] = useState<string[]>(initialGrades || []);
   const [selectedGrade, setSelectedGrade] = useState<string>(preselectGrade || "");
   const [selectedSubject, setSelectedSubject] = useState<string>(preselectSubject || "");
   const [subjects, setSubjects] = useState<SubjectData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchGradesList = async () => {
+      const fetchedGrades = await getGrades();
+      if (fetchedGrades && fetchedGrades.length > 0) {
+        setGrades(fetchedGrades);
+      }
+    };
+
+    fetchGradesList();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchGradesList();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedGrade) {
@@ -192,7 +215,7 @@ export function SchoolContentClient({
                 className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
               >
                 <option value="">Select a grade...</option>
-                {initialGrades.map((grade) => (
+                {grades.map((grade) => (
                   <option key={grade} value={grade}>
                     {grade}
                   </option>

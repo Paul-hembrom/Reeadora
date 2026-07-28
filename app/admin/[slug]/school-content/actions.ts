@@ -3,6 +3,22 @@
 import { createAdminClient, createClient } from "@/utils/supabase/server";
 import { SignJWT } from "jose";
 
+export async function getGrades() {
+  const adminClient = await createAdminClient();
+  const { data, error } = await adminClient
+    .from("curriculum_library")
+    .select("grade");
+
+  if (error) {
+    console.error("Error fetching grades:", error);
+    return [];
+  }
+
+  const grades = Array.from(new Set(data.map((d: any) => d.grade))).sort();
+  console.log('Fetched grades:', grades);
+  return grades;
+}
+
 export async function getSubjectsByGrade(grade: string) {
   const adminClient = await createAdminClient();
   const { data, error } = await adminClient

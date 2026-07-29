@@ -130,6 +130,7 @@ export function SchoolContentClient({
     const fetchGradesList = async () => {
       const fetchedGrades = await getGrades();
       if (fetchedGrades && fetchedGrades.length > 0) {
+        console.log('Fetched grades:', fetchedGrades);
         setGrades(fetchedGrades);
       }
     };

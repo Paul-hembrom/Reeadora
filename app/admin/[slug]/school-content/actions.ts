@@ -3,23 +3,56 @@
 import { createAdminClient, createClient } from "@/utils/supabase/server";
 import { SignJWT } from "jose";
 
+import { unstable_noStore as noStore } from "next/cache";
+
 export async function getGrades() {
+  noStore();
   const adminClient = await createAdminClient();
+  
   const { data, error } = await adminClient
     .from("curriculum_library")
-    .select("grade");
+    .select("grade, subject")
+    .limit(100000);
 
   if (error) {
     console.error("Error fetching grades:", error);
     return [];
   }
 
-  const grades = Array.from(new Set(data.map((d: any) => d.grade))).sort();
-  console.log('Fetched grades:', grades);
+  // 1. Diagnostic logging
+  console.log("--- Diagnostic Logging: Curriculum Library ---");
+  const gradeSubjectCounts: Record<string, number> = {};
+  let nullOrEmptyCount = 0;
+
+  data.forEach((row: any) => {
+    if (!row.grade || row.grade.trim() === "") {
+      nullOrEmptyCount++;
+    } else {
+      const key = `${row.grade.trim()} - ${row.subject || 'unknown'}`;
+      gradeSubjectCounts[key] = (gradeSubjectCounts[key] || 0) + 1;
+    }
+  });
+
+  console.log(`Total rows fetched: ${data.length}`);
+  console.log(`Rows with null/empty grade: ${nullOrEmptyCount}`);
+  console.log("Grade + Subject counts:", gradeSubjectCounts);
+  console.log("----------------------------------------------");
+
+  // 2. Normalize and get distinct grades
+  const grades = Array.from(
+    new Set(
+      data
+        .map((d: any) => (d.grade ? d.grade.trim() : ""))
+        .filter(Boolean)
+    )
+  ).sort();
+  
+  console.log('Fetched distinct normalized grades:', grades);
   return grades;
 }
 
 export async function getSubjectsByGrade(grade: string) {
+  noStore();
   const adminClient = await createAdminClient();
   const { data, error } = await adminClient
     .from("curriculum_library")

@@ -41,20 +41,16 @@ export async function GET(request: Request) {
           const role = payload.role as string;
           
           if (orgId && role) {
-            // Upsert member
-            const { data: memberRecordCheck } = await adminSupabase
-              .from("organization_members")
-              .select("id")
-              .eq("organization_id", orgId)
-              .eq("user_id", user.id)
-              .maybeSingle();
+            // Upsert member safely with ignoreDuplicates to avoid 409 errors & preserve existing role
+            const { error: upsertErr } = await adminSupabase
+              .from('organization_members')
+              .upsert(
+                { organization_id: orgId, user_id: user.id, role },
+                { onConflict: 'organization_id,user_id', ignoreDuplicates: true }
+              );
 
-            if (!memberRecordCheck) {
-              await adminSupabase.from('organization_members').insert({
-                organization_id: orgId,
-                user_id: user.id,
-                role
-              });
+            if (upsertErr) {
+              console.error('[auth-callback] join_token member upsert failed:', upsertErr.message);
             }
 
             const { data: memberRecord } = await adminSupabase
@@ -132,19 +128,15 @@ export async function GET(request: Request) {
 
         if (invitations && invitations.length > 0) {
           for (const inv of invitations) {
-            const { data: existingMember } = await adminSupabase
+            const { error: upsertErr } = await adminSupabase
               .from('organization_members')
-              .select('id')
-              .eq('organization_id', inv.org_id)
-              .eq('user_id', user.id)
-              .maybeSingle();
+              .upsert(
+                { organization_id: inv.org_id, user_id: user.id, role: 'teacher' },
+                { onConflict: 'organization_id,user_id', ignoreDuplicates: true }
+              );
 
-            if (!existingMember) {
-              await adminSupabase.from('organization_members').insert({
-                organization_id: inv.org_id,
-                user_id: user.id,
-                role: 'teacher'
-              });
+            if (upsertErr) {
+              console.error('[auth-callback] teacher invitation member upsert failed:', upsertErr.message);
             }
 
             await adminSupabase.from('teacher_assignments').insert({

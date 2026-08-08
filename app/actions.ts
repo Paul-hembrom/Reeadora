@@ -307,9 +307,12 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
 
   const { error: memberError } = await adminClient
     .from("organization_members")
-    .insert({ organization_id: classId, user_id: teacherUser.id, role: "teacher" });
+    .upsert(
+      { organization_id: classId, user_id: teacherUser.id, role: "teacher" },
+      { onConflict: "organization_id,user_id", ignoreDuplicates: true }
+    );
 
-  if (memberError && memberError.code !== '23505') { // ignore duplicate
+  if (memberError) {
     return { error: memberError.message };
   }
 
@@ -441,10 +444,12 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   // Ensure member exists
   const { error: memberInsertError } = await adminClient
     .from("organization_members")
-    .insert({ organization_id: classId, user_id: user.id, role });
+    .upsert(
+      { organization_id: classId, user_id: user.id, role },
+      { onConflict: "organization_id,user_id", ignoreDuplicates: true }
+    );
 
-  // ignore duplicate error
-  if (memberInsertError && memberInsertError.code !== '23505') {
+  if (memberInsertError) {
     return { error: "Could not add as member." };
   }
 

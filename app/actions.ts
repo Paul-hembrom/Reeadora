@@ -309,7 +309,7 @@ export async function addTeacher(schoolId: string, slug: string, classId: string
     .from("organization_members")
     .upsert(
       { organization_id: classId, user_id: teacherUser.id, role: "teacher" },
-      { onConflict: "organization_id,user_id", ignoreDuplicates: true }
+      { onConflict: "organization_id,user_id" }
     );
 
   if (memberError) {

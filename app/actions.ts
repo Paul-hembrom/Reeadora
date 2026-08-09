@@ -463,13 +463,6 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
 
   const actualRole = memberRecord?.role || role;
 
-  const { data: { session } } = await supabase.auth.getSession();
-  const accessToken = session?.access_token;
-
-  if (!accessToken) {
-    return { error: "Action requires an active session." };
-  }
-
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) throw new Error("JWT_SECRET is not configured on server");
 
@@ -490,7 +483,7 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   };
 
   cookieStore.set('token', localToken, cookieOptions);
-  cookieStore.set('sb-role', role, cookieOptions);
+  cookieStore.set('sb-role', actualRole, cookieOptions);
   cookieStore.set('sb-org-id', classId, cookieOptions);
 
   const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";

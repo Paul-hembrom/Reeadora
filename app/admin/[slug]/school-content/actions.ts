@@ -88,10 +88,12 @@ export async function prepareContentRedirect(role: string, orgId: string) {
   const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
 
-  // 1. Clear any legacy host-only cookies to prevent duplicate cookie issues
+  // 1. Clear any legacy host-only AND parent-domain class cookies to prevent duplicate or stale cookie issues
   cookieStore.set('token', '', { path: '/', maxAge: 0 });
   cookieStore.set('sb-role', '', { path: '/', maxAge: 0 });
   cookieStore.set('sb-org-id', '', { path: '/', maxAge: 0 });
+  cookieStore.set('sb-role', '', { path: '/', domain: '.alphanexoraai.com', maxAge: 0 });
+  cookieStore.set('sb-org-id', '', { path: '/', domain: '.alphanexoraai.com', maxAge: 0 });
 
   // 2. Set new cookies on parent domain
   const cookieOptions = {

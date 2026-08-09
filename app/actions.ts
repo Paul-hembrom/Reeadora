@@ -474,10 +474,12 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
 
-  // 1. Clear any legacy host-only cookies to prevent duplicate cookie issues
+  // 1. Clear any legacy host-only AND parent-domain class cookies to prevent duplicate or stale cookie issues
   cookieStore.set('token', '', { path: '/', maxAge: 0 });
   cookieStore.set('sb-role', '', { path: '/', maxAge: 0 });
   cookieStore.set('sb-org-id', '', { path: '/', maxAge: 0 });
+  cookieStore.set('sb-role', '', { path: '/', domain: '.alphanexoraai.com', maxAge: 0 });
+  cookieStore.set('sb-org-id', '', { path: '/', domain: '.alphanexoraai.com', maxAge: 0 });
 
   // 2. Set new cookies on parent domain
   const cookieOptions = {
@@ -496,6 +498,21 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
   const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
   const nocache = Date.now();
   
+  return { successUrl: `${readoraUrl}/?_nocache=${nocache}` };
+}
+
+export async function clearOrgContext() {
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+
+  // Clear sb-org-id and sb-role across both host-only and parent-domain scopes
+  cookieStore.set('sb-role', '', { path: '/', maxAge: 0 });
+  cookieStore.set('sb-org-id', '', { path: '/', maxAge: 0 });
+  cookieStore.set('sb-role', '', { path: '/', domain: '.alphanexoraai.com', maxAge: 0 });
+  cookieStore.set('sb-org-id', '', { path: '/', domain: '.alphanexoraai.com', maxAge: 0 });
+
+  const readoraUrl = process.env.NEXT_PUBLIC_READORA_URL || "https://redora.alphanexoraai.com";
+  const nocache = Date.now();
   return { successUrl: `${readoraUrl}/?_nocache=${nocache}` };
 }
 

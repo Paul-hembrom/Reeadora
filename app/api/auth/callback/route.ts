@@ -78,10 +78,12 @@ export async function GET(request: Request) {
               const { cookies } = await import('next/headers');
               const cookieStore = await cookies();
 
-              // 1. Clear any legacy host-only cookies
+              // 1. Clear any legacy host-only AND parent-domain class cookies
               cookieStore.set('token', '', { path: '/', maxAge: 0 });
               cookieStore.set('sb-role', '', { path: '/', maxAge: 0 });
               cookieStore.set('sb-org-id', '', { path: '/', maxAge: 0 });
+              cookieStore.set('sb-role', '', { path: '/', domain: '.alphanexoraai.com', maxAge: 0 });
+              cookieStore.set('sb-org-id', '', { path: '/', domain: '.alphanexoraai.com', maxAge: 0 });
 
               // 2. Set new cookies on parent domain
               const cookieOptions = {

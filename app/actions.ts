@@ -473,6 +473,13 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
 
   const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
+
+  // 1. Clear any legacy host-only cookies to prevent duplicate cookie issues
+  cookieStore.set('token', '', { path: '/', maxAge: 0 });
+  cookieStore.set('sb-role', '', { path: '/', maxAge: 0 });
+  cookieStore.set('sb-org-id', '', { path: '/', maxAge: 0 });
+
+  // 2. Set new cookies on parent domain
   const cookieOptions = {
     httpOnly: true,
     secure: true,

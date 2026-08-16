@@ -423,8 +423,37 @@ export async function joinClass(classId: string, role: 'teacher' | 'student', pa
     }
   }
 
-  // Check student limit if joining as student
+  // Check educator restriction and student limit if joining as student
   if (role === 'student') {
+    // ONE GMAIL = ONE ROLE. An account that teaches anywhere must never acquire
+    // a student role. `ignoreDuplicates` already covers the same-class case;
+    // this closes the cross-class one, where no row exists yet to protect.
+    const { data: educatorRows } = await adminClient
+      .from("organization_members")
+      .select("organization_id, role")
+      .eq("user_id", user.id)
+      .in("role", ["teacher", "admin"]);
+
+    const { data: adminRow } = await adminClient
+      .from("school_admins")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const { data: assignmentRow } = await adminClient
+      .from("teacher_assignments")
+      .select("id")
+      .eq("teacher_user_id", user.id)
+      .maybeSingle();
+
+    if ((educatorRows && educatorRows.length > 0) || adminRow || assignmentRow) {
+      return {
+        error:
+          "This account is registered as a teacher. Teacher accounts cannot join as a student. " +
+          "Please use the Teacher login, or sign in with a different Google account.",
+      };
+    }
+
     const { data: memberRecordCheck } = await adminClient
       .from("organization_members")
       .select("id")

@@ -85,12 +85,18 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
       }
 
       if (memberChecks && memberChecks.length > 0) {
-        hasAccess = true;
-        const teacherMember = memberChecks.find(m => m.role === 'teacher');
-        const activeMember = teacherMember || memberChecks[0];
-        
-        userRole = activeMember.role || "student";
-        userOrgId = activeMember.organization_id;
+        // V2 curriculum is ADMIN/TEACHER only. A student joining a class via the
+        // V1 class-gate gets an organization_members row, so membership alone must
+        // not grant access here.
+        const teacherMember = memberChecks.find(
+          (m) => m.role === 'teacher' || m.role === 'admin'
+        );
+        if (teacherMember) {
+          hasAccess = true;
+          userRole = teacherMember.role;
+          userOrgId = teacherMember.organization_id;
+        }
+        // No teacher/admin membership -> hasAccess stays false -> access-denied card.
       } else if (teacherAssignments && teacherAssignments.length > 0) {
         hasAccess = true;
         userRole = "teacher";
@@ -99,26 +105,6 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
         hasAccess = true;
         userRole = "teacher";
         userOrgId = inviteOrgId;
-      }
-
-      if (hasAccess && userOrgId) {
-        const userOrg = orgs.find(o => o.id === userOrgId);
-        if (userRole === "student" && userOrg) {
-          // Attempt to extract grade and subject from organization name
-          // E.g. "Grade 1 Math", "5th Grade Science", etc.
-          const gradeMatch = userOrg.name.match(/(?:Grade\s*\d+|\d+(?:st|nd|rd|th)\s*Grade)/i);
-          if (gradeMatch) {
-             preselectGrade = gradeMatch[0];
-          }
-          
-          const potentialSubjects = ["Math", "Science", "History", "English", "Reading", "Writing", "Art", "Music", "Physical Education", "Social Studies"];
-          for (const sub of potentialSubjects) {
-            if (userOrg.name.toLowerCase().includes(sub.toLowerCase())) {
-              preselectSubject = sub;
-              break;
-            }
-          }
-        }
       }
     }
   }
@@ -132,10 +118,12 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
                <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white">Access Denied</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">You do not have permission to view the curriculum for this school.</p>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">School Content is for teachers</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Pre-loaded curriculum is available to teachers and administrators. To open your class materials, go to your school page and sign in to your class.
+              </p>
             </div>
-            <Button nativeButton={false} render={<Link href="/join">Return to Workspaces</Link>} variant="outline" className="w-full mt-2" />
+            <Button nativeButton={false} render={<Link href={`/school/${slug}`}>Go to School Page</Link>} variant="outline" className="w-full mt-2" />
           </CardContent>
         </Card>
       </div>
@@ -149,14 +137,6 @@ export default async function SchoolContentPage({ params }: { params: Promise<{ 
     .order("grade");
 
   const grades = Array.from(new Set((gradesData || []).map(d => d.grade as string)));
-
-  // Best effort matching of extracted grade to actual grades
-  if (preselectGrade) {
-     const match = grades.find(g => g.toLowerCase() === preselectGrade.toLowerCase() || g.toLowerCase().includes(preselectGrade.toLowerCase()) || preselectGrade.toLowerCase().includes(g.toLowerCase()));
-     if (match) {
-        preselectGrade = match;
-     }
-  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

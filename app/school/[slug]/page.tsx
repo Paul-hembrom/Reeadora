@@ -1,12 +1,10 @@
-import { createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ClassGate } from "./class-gate";
 import { ParallaxBanner } from "./parallax-banner";
 import { checkAndGetSubscription } from "@/app/actions";
 import { CopyX } from "lucide-react";
-
-export const revalidate = 60; // optionally cache for 60s
 
 export default async function SchoolPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -32,6 +30,57 @@ export default async function SchoolPage({ params }: { params: Promise<{ slug: s
 
   const hasInteractiveLessons = sub?.plan === 'growth' || sub?.plan === 'enterprise';
 
+  // Check if current signed-in user is an admin or teacher with access to School Content
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let canAccessSchoolContent = false;
+  if (user) {
+    const { data: adminCheck } = await adminClient
+      .from("school_admins")
+      .select("id")
+      .eq("school_id", school.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (adminCheck) {
+      canAccessSchoolContent = true;
+    } else if (classes && classes.length > 0) {
+      const orgIds = classes.map(c => c.id);
+
+      const { data: memberChecks } = await adminClient
+        .from("organization_members")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .in("organization_id", orgIds);
+
+      const isTeacherOrAdminMember = memberChecks?.some(m => m.role === "teacher" || m.role === "admin");
+
+      const { data: teacherAssignments } = await adminClient
+        .from("teacher_assignments")
+        .select("id")
+        .eq("teacher_user_id", user.id)
+        .in("org_id", orgIds);
+
+      let hasPendingInvite = false;
+      if (user.email) {
+        const { data: inviteChecks } = await adminClient
+          .from("teacher_invitations")
+          .select("id")
+          .eq("email", user.email)
+          .in("org_id", orgIds)
+          .eq("status", "pending");
+        if (inviteChecks && inviteChecks.length > 0) {
+          hasPendingInvite = true;
+        }
+      }
+
+      if (isTeacherOrAdminMember || (teacherAssignments && teacherAssignments.length > 0) || hasPendingInvite) {
+        canAccessSchoolContent = true;
+      }
+    }
+  }
+
   return (
     <div className="space-y-12 max-w-5xl mx-auto px-4 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center w-full">
@@ -49,43 +98,35 @@ export default async function SchoolPage({ params }: { params: Promise<{ slug: s
       ) : (
         <div className="space-y-10">
           {/* Workspace Features Card */}
-          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 backdrop-blur-sm">
-             <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white mb-4">Workspace Features</h2>
-             <div className="flex flex-wrap gap-4">
-                <Link href={`/admin/${slug}/school-content`} className="flex flex-col p-4 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer w-[240px]">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-                  </div>
-                  <h3 className="font-semibold text-slate-900 dark:text-slate-100">School Content</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Browse and access curriculum learning materials.</p>
-                </Link>
-                
-                <div 
-                  className={`flex flex-col p-4 rounded-2xl border ${
-                    hasInteractiveLessons 
-                      ? 'border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer' 
-                      : 'border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/20 opacity-70 cursor-not-allowed'
-                  } w-[240px]`}
-                  title={!hasInteractiveLessons ? "Available on Growth plan." : "Launch Interactive Lesson"}
-                >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
-                    hasInteractiveLessons
-                      ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400'
-                      : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
-                  }`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/><line x1="19" x2="19" y1="12" y2="12"/></svg>
-                  </div>
-                  <h3 className="font-semibold text-slate-900 dark:text-slate-100">Interactive Lessons</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">AI-guided interactive learning modules.</p>
+          {(canAccessSchoolContent || hasInteractiveLessons) && (
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 backdrop-blur-sm">
+               <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white mb-4">Workspace Features</h2>
+               <div className="flex flex-wrap gap-4">
+                  {canAccessSchoolContent && (
+                    <Link href={`/admin/${slug}/school-content`} className="flex flex-col p-4 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer w-[240px]">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                      </div>
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100">School Content</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Browse and access curriculum learning materials.</p>
+                    </Link>
+                  )}
                   
-                  {!hasInteractiveLessons && (
-                    <div className="mt-3 text-[10px] uppercase tracking-wider font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 w-fit px-2 py-0.5 rounded">
-                      Needs Growth Plan
+                  {hasInteractiveLessons && (
+                    <div 
+                      className="flex flex-col p-4 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer w-[240px]"
+                      title="Launch Interactive Lesson"
+                    >
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/><line x1="19" x2="19" y1="12" y2="12"/></svg>
+                      </div>
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100">Interactive Lessons</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">AI-guided interactive learning modules.</p>
                     </div>
                   )}
-                </div>
-             </div>
-          </div>
+               </div>
+            </div>
+          )}
 
           <div className="space-y-6">
           <div className="flex items-center justify-between">
